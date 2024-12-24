@@ -22,7 +22,6 @@ public class ClipboardManager: ObservableObject {
     public let userDefaults = UserDefaults(suiteName: "group.com.ahmtcanx.clipboardmanager")
     
     private var lastCopiedText: String?
-    private var timer: Timer?
     
     private init() {
         loadItems()
@@ -30,19 +29,24 @@ public class ClipboardManager: ObservableObject {
     }
     
     private func startMonitoring() {
-        // Her 1 saniyede bir panodaki değişiklikleri kontrol et
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.checkClipboard()
-        }
-        timer?.fire() // İlk kontrolü hemen yap
+        // Pano değişikliklerini dinle
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(checkClipboard),
+            name: UIPasteboard.changedNotification,
+            object: nil
+        )
         
-        // Uygulama arka plana geçtiğinde ve öne geldiğinde de kontrol et
+        // Uygulama arka plandan öne geldiğinde kontrol et
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(checkClipboard),
             name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
+        
+        // İlk açılışta mevcut panoyu kontrol et
+        checkClipboard()
     }
     
     @objc private func checkClipboard() {
@@ -87,7 +91,6 @@ public class ClipboardManager: ObservableObject {
     }
     
     deinit {
-        timer?.invalidate()
         NotificationCenter.default.removeObserver(self)
     }
 } 
