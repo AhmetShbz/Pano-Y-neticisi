@@ -14,6 +14,7 @@ struct OnboardingPage: Identifiable {
 struct OnboardingView: View {
     @ObservedObject var onboardingManager: OnboardingManager
     @State private var currentPage = 0
+    @Environment(\.colorScheme) private var colorScheme
     
     var pages: [OnboardingPage] {
         [
@@ -61,8 +62,6 @@ struct OnboardingView: View {
     }
     
     var body: some View {
-        @Environment(\.colorScheme) var colorScheme
-        
         ZStack {
             // Arka plan gradyanı
             LinearGradient(
@@ -75,14 +74,13 @@ struct OnboardingView: View {
             )
             .ignoresSafeArea()
             
-            VStack {
+            VStack(spacing: 0) {
                 // İlerleme göstergesi
                 HStack {
-                    ForEach(0..<pages.count) { index in
+                    ForEach(0..<pages.count, id: \.self) { index in
                         Capsule()
                             .fill(currentPage == index ? Color.blue : Color.gray.opacity(0.3))
                             .frame(width: currentPage == index ? 20 : 7, height: 7)
-                            .contentTransition(.interpolate)
                     }
                 }
                 .padding(.top)
@@ -90,95 +88,14 @@ struct OnboardingView: View {
                 // Sayfa içeriği
                 TabView(selection: $currentPage) {
                     ForEach(pages.indices, id: \.self) { index in
-                        VStack(spacing: 25) {
-                            Spacer()
-                            
-                            // İkon
-                            Image(systemName: pages[index].image)
-                                .font(.system(size: 80))
-                                .foregroundColor(.blue)
-                                .symbolRenderingMode(.hierarchical)
-                                .symbolEffect(.bounce, value: currentPage)
-                                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                            
-                            VStack(spacing: 16) {
-                                // Başlık
-                                Text(pages[index].title)
-                                    .font(.title)
-                                    .bold()
-                                    .multilineTextAlignment(.center)
-                                
-                                // Ana açıklama
-                                Text(pages[index].description)
-                                    .font(.body)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
-                                    .foregroundColor(.secondary)
-                                
-                                // İkincil açıklama
-                                if let secondaryText = pages[index].secondaryDescription {
-                                    Text(secondaryText)
-                                        .font(.callout)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal)
-                                        .foregroundColor(.blue)
-                                        .padding(.top, 8)
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                            // Aksiyon butonu
-                            if let buttonTitle = pages[index].buttonTitle {
-                                Button(action: {
-                                    if let action = pages[index].buttonAction {
-                                        action()
-                                    }
-                                }) {
-                                    Text(buttonTitle)
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background {
-                                            RoundedRectangle(cornerRadius: 15)
-                                                .fill(
-                                                    LinearGradient(
-                                                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                                                        startPoint: .leading,
-                                                        endPoint: .trailing
-                                                    )
-                                                )
-                                                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
-                                        }
-                                }
-                                .padding(.horizontal, 30)
-                                .buttonStyle(.bounce)
-                            }
-                            
-                            // İleri butonu (son sayfada gizli)
+                        PageView(page: pages[index]) {
                             if currentPage < pages.count - 1 {
-                                Button(action: {
-                                    withAnimation {
-                                        currentPage += 1
-                                    }
-                                }) {
-                                    HStack {
-                                        Text("Devam Et")
-                                        Image(systemName: "chevron.right")
-                                    }
-                                    .foregroundColor(.blue)
-                                    .font(.headline)
+                                withAnimation {
+                                    currentPage += 1
                                 }
-                                .padding(.top, 10)
-                                .buttonStyle(.bounce)
                             }
-                            
-                            Spacer()
-                                .frame(height: 20)
                         }
                         .tag(index)
-                        .padding()
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -197,5 +114,93 @@ struct OnboardingView: View {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
+    }
+}
+
+struct PageView: View {
+    let page: OnboardingPage
+    let onContinue: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 25) {
+            Spacer()
+            
+            // İkon
+            Image(systemName: page.image)
+                .font(.system(size: 80))
+                .foregroundColor(.blue)
+                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+            
+            VStack(spacing: 16) {
+                // Başlık
+                Text(page.title)
+                    .font(.title)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                
+                // Ana açıklama
+                Text(page.description)
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                    .foregroundColor(.secondary)
+                
+                // İkincil açıklama
+                if let secondaryText = page.secondaryDescription {
+                    Text(secondaryText)
+                        .font(.callout)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                        .foregroundColor(.blue)
+                        .padding(.top, 8)
+                }
+            }
+            
+            Spacer()
+            
+            // Aksiyon butonu
+            if let buttonTitle = page.buttonTitle {
+                Button(action: {
+                    if let action = page.buttonAction {
+                        action()
+                    }
+                }) {
+                    Text(buttonTitle)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
+                        )
+                }
+                .padding(.horizontal, 30)
+            }
+            
+            // İleri butonu
+            if page.buttonTitle == nil {
+                Button(action: onContinue) {
+                    HStack {
+                        Text("Devam Et")
+                        Image(systemName: "chevron.right")
+                    }
+                    .foregroundColor(.blue)
+                    .font(.headline)
+                }
+                .padding(.top, 10)
+            }
+            
+            Spacer()
+                .frame(height: 20)
+        }
+        .padding()
     }
 } 
