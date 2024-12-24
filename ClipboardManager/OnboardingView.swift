@@ -16,48 +16,34 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateBackground = false
+    @State private var showNextButton = false
+    @State private var dragOffset = CGSize.zero
     
     var pages: [OnboardingPage] {
         [
             OnboardingPage(
                 image: "keyboard.fill",
-                title: "Hoş Geldiniz!",
-                description: "Pano Yöneticisi ile kopyaladığınız her şeye anında erişin.",
+                title: "Hoş Geldiniz! 👋",
+                description: "Pano Yöneticisi ile kopyaladığınız her şeye anında erişin ve üretkenliğinizi artırın. Hızlı, güvenli ve kullanımı kolay!",
                 buttonTitle: nil,
                 buttonAction: nil,
-                secondaryDescription: "Hızlı ve kolay kullanım için klavye eklentimizi kuralım."
+                secondaryDescription: "Hızlı ve kolay kullanım için klavye eklentimizi birlikte kuralım. Sadece birkaç adım kaldı! 🚀"
             ),
             OnboardingPage(
-                image: "keyboard.badge.eye.fill",
-                title: "Klavye Eklentisi",
-                description: "Klavye eklentimiz sayesinde kopyaladığınız metinlere her uygulamada kolayca erişebilirsiniz.",
+                image: "doc.on.clipboard",
+                title: "Kurulum Adımları 📝",
+                description: "1️⃣ 'Klavyeler'e dokunun\n2️⃣ 'Yeni Klavye Ekle' seçeneğine gidin\n3️⃣ 'Pano Yöneticisi'ni bulun\n4️⃣ Klavyeyi etkinleştirin\n5️⃣ Tam Erişim'i açın",
                 buttonTitle: "Klavye Ayarlarını Aç",
                 buttonAction: openKeyboardSettings,
-                secondaryDescription: "Ayarlar > Klavye > Klavyeler > Yeni Klavye Ekle"
-            ),
-            OnboardingPage(
-                image: "arrow.right.doc.on.clipboard.fill",
-                title: "Kurulum Adımları",
-                description: "1️⃣ 'Klavyeler'e dokunun\n2️⃣ 'Yeni Klavye Ekle' seçeneğine gidin\n3️⃣ 'Pano Yöneticisi'ni bulun\n4️⃣ Klavyeyi etkinleştirin",
-                buttonTitle: "Anladım, Devam Et",
-                buttonAction: nil,
-                secondaryDescription: "💡 İpucu: Tüm adımları tamamladıktan sonra 'Devam Et' butonuna basın"
-            ),
-            OnboardingPage(
-                image: "lock.shield.fill",
-                title: "Tam Erişim",
-                description: "Kopyaladığınız metinlere erişebilmek için klavyeye 'Tam Erişim' izni gerekiyor.",
-                buttonTitle: "Tam Erişimi Etkinleştir",
-                buttonAction: openFullAccessSettings,
-                secondaryDescription: "🔒 Güvenliğiniz bizim için önemli. Bu izin sadece pano içeriğine erişmek için kullanılacak."
+                secondaryDescription: "🔒 Tam Erişim izni sadece pano içeriğine erişmek için kullanılacak.\n✨ Ayarlar > Klavye > Klavyeler > Yeni Klavye Ekle"
             ),
             OnboardingPage(
                 image: "checkmark.seal.fill",
-                title: "Her Şey Hazır!",
-                description: "Artık kopyaladığınız her şey otomatik olarak kaydedilecek.",
+                title: "Her Şey Hazır! 🎉",
+                description: "Tebrikler! Artık kopyaladığınız her şey otomatik olarak kaydedilecek ve her yerde erişilebilir olacak. Üretkenliğinizi artırmaya hazırsınız!",
                 buttonTitle: "Uygulamayı Kullanmaya Başla",
                 buttonAction: { onboardingManager.completeOnboarding() },
-                secondaryDescription: "📱 Herhangi bir uygulamada klavye simgesine basılı tutup Pano Yöneticisi'ni seçerek kayıtlı metinlerinize ulaşabilirsiniz."
+                secondaryDescription: "📱 Herhangi bir uygulamada klavye simgesine basılı tutup Pano Yöneticisi'ni seçerek kayıtlı metinlerinize ulaşabilirsiniz.\n✨ İyi kullanımlar!"
             )
         ]
     }
@@ -68,17 +54,24 @@ struct OnboardingView: View {
             GeometryReader { geometry in
                 ZStack {
                     Circle()
-                        .fill(Color.blue.opacity(0.2))
-                        .frame(width: geometry.size.width * 0.6)
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: geometry.size.width * 0.8)
                         .offset(x: animateBackground ? geometry.size.width * 0.3 : -geometry.size.width * 0.3,
                                 y: animateBackground ? geometry.size.height * 0.2 : -geometry.size.height * 0.2)
-                        .blur(radius: 60)
+                        .blur(radius: 80)
                     
                     Circle()
-                        .fill(Color.purple.opacity(0.2))
-                        .frame(width: geometry.size.width * 0.8)
+                        .fill(Color.purple.opacity(0.15))
+                        .frame(width: geometry.size.width)
                         .offset(x: animateBackground ? -geometry.size.width * 0.2 : geometry.size.width * 0.2,
                                 y: animateBackground ? -geometry.size.height * 0.3 : geometry.size.height * 0.3)
+                        .blur(radius: 80)
+                    
+                    Circle()
+                        .fill(Color.pink.opacity(0.1))
+                        .frame(width: geometry.size.width * 0.7)
+                        .offset(x: animateBackground ? geometry.size.width * 0.1 : -geometry.size.width * 0.1,
+                                y: animateBackground ? -geometry.size.height * 0.2 : geometry.size.height * 0.2)
                         .blur(radius: 60)
                 }
                 .onAppear {
@@ -97,6 +90,7 @@ struct OnboardingView: View {
                             .fill(currentPage == index ? Color.blue : Color.gray.opacity(0.3))
                             .frame(width: currentPage == index ? 24 : 8, height: 8)
                             .animation(.spring(response: 0.3), value: currentPage)
+                            .shadow(color: currentPage == index ? Color.blue.opacity(0.3) : Color.clear, radius: 4, x: 0, y: 2)
                     }
                 }
                 .padding(.top, 20)
@@ -113,6 +107,33 @@ struct OnboardingView: View {
                             }
                         }
                         .tag(index)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { gesture in
+                                    self.dragOffset = gesture.translation
+                                }
+                                .onEnded { gesture in
+                                    let threshold: CGFloat = 50
+                                    if gesture.translation.width > threshold && currentPage > 0 {
+                                        withAnimation {
+                                            currentPage -= 1
+                                        }
+                                    } else if gesture.translation.width < -threshold && currentPage < pages.count - 1 {
+                                        withAnimation {
+                                            currentPage += 1
+                                        }
+                                    }
+                                    self.dragOffset = .zero
+                                }
+                        )
+                        .onAppear {
+                            withAnimation(.easeIn(duration: 0.3).delay(0.3)) {
+                                showNextButton = true
+                            }
+                        }
+                        .onDisappear {
+                            showNextButton = false
+                        }
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -138,6 +159,8 @@ struct PageView: View {
     let colorScheme: ColorScheme
     let onContinue: () -> Void
     @State private var isAnimating = false
+    @State private var showContent = false
+    @State private var rotation3D = false
     
     var body: some View {
         VStack(spacing: 25) {
@@ -147,17 +170,28 @@ struct PageView: View {
             Image(systemName: page.image)
                 .font(.system(size: 80))
                 .foregroundColor(.blue)
-                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
                 .scaleEffect(isAnimating ? 1.1 : 0.9)
+                .rotationEffect(.degrees(isAnimating ? 8 : -8))
                 .animation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
-                .onAppear { isAnimating = true }
+                .onAppear { 
+                    isAnimating = true
+                    withAnimation(.easeIn(duration: 0.5)) {
+                        showContent = true
+                    }
+                }
+                .onDisappear {
+                    showContent = false
+                }
             
             VStack(spacing: 16) {
                 // Başlık
                 Text(page.title)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
-                    .foregroundColor(colorScheme == .dark ? .white : .primary)
+                    .foregroundColor(.blue)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
                 
                 // Ana açıklama
                 Text(page.description)
@@ -165,6 +199,8 @@ struct PageView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                     .foregroundColor(.secondary)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
                 
                 // İkincil açıklama
                 if let secondaryText = page.secondaryDescription {
@@ -174,9 +210,11 @@ struct PageView: View {
                         .padding(.horizontal)
                         .foregroundColor(.blue)
                         .padding(.top, 8)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
                 }
             }
-            .transition(.opacity)
+            .animation(.easeOut(duration: 0.5).delay(0.2), value: showContent)
             
             Spacer()
             
@@ -195,14 +233,12 @@ struct PageView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                         .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            Color.blue
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 8, x: 0, y: 4)
+                        .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 12, x: 0, y: 6)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
                 }
                 .padding(.horizontal, 30)
                 .scaleEffect(isAnimating ? 1.0 : 0.95)
@@ -224,6 +260,8 @@ struct PageView: View {
                         Capsule()
                             .stroke(Color.blue, lineWidth: 2)
                     )
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
                 }
                 .padding(.top, 10)
             }
