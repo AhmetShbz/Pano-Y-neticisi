@@ -18,6 +18,7 @@ struct OnboardingView: View {
     @State private var animateBackground = false
     @State private var showNextButton = false
     @State private var dragOffset = CGSize.zero
+    @State private var checkTimer: Timer?
     
     var pages: [OnboardingPage] {
         [
@@ -31,15 +32,15 @@ struct OnboardingView: View {
             ),
             OnboardingPage(
                 image: "doc.on.clipboard",
-                title: "Kurulum Adımları 📝",
-                description: "1️⃣ Ayarlar > Klavye > Klavyeler\n2️⃣ 'Yeni Klavye Ekle' > Pano Yöneticisi\n3️⃣ Tam Erişim'i Etkinleştir",
+                title: "Kurulum Adımları ",
+                description: "Ayarlar uygulamasında:\n\nKlavye → Klavyeler → Yeni Klavye Ekle\n\nPano Yöneticisi'ni seçtikten sonra Tam Erişim'i etkinleştirin.",
                 buttonTitle: "Klavye Ayarlarını Aç",
                 buttonAction: openKeyboardSettings,
-                secondaryDescription: "🔒 Tam Erişim izni sadece kopyaladığınız metinlere erişmek için kullanılır ve verileriniz güvende kalır."
+                secondaryDescription: "🔒 Tam Erişim izni yalnızca pano içeriğine erişmek için kullanılır ve verileriniz her zaman güvende kalır."
             ),
             OnboardingPage(
                 image: "checkmark.seal.fill",
-                title: "Her Şey Hazır! 🎉",
+                title: "Her Şey Hazır! ",
                 description: "Tebrikler! Artık kopyaladığınız her şey otomatik olarak kaydedilecek ve her yerde erişilebilir olacak. Üretkenliğinizi artırmaya hazırsınız!",
                 buttonTitle: "Uygulamayı Kullanmaya Başla",
                 buttonAction: { onboardingManager.completeOnboarding() },
@@ -137,6 +138,17 @@ struct OnboardingView: View {
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            // Zamanlayıcıyı başlat
+            checkTimer?.invalidate()
+            checkTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+                if currentPage == 1 {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        currentPage = 2
+                    }
+                }
             }
         }
     }
