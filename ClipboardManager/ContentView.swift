@@ -4,9 +4,10 @@ import UIKit
 struct ContentView: View {
     @StateObject private var clipboardManager = ClipboardManager.shared
     @StateObject private var onboardingManager = OnboardingManager()
-    @State private var showingAlert = false
-    @State private var selectedText: String?
+    @State private var showToast = false
+    @State private var toastMessage = ""
     @State private var showSettings = false
+    @State private var animateBackground = false
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
@@ -16,52 +17,79 @@ struct ContentView: View {
             } else {
                 NavigationView {
                     ZStack {
-                        // Arka plan gradyanı
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.blue.opacity(colorScheme == .dark ? 0.1 : 0.05),
-                                Color.purple.opacity(colorScheme == .dark ? 0.1 : 0.05)
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        // Animasyonlu arka plan
+                        GeometryReader { geometry in
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.15))
+                                    .frame(width: geometry.size.width * 0.6)
+                                    .offset(x: animateBackground ? geometry.size.width * 0.3 : -geometry.size.width * 0.3,
+                                            y: animateBackground ? geometry.size.height * 0.2 : -geometry.size.height * 0.2)
+                                    .blur(radius: 50)
+                                
+                                Circle()
+                                    .fill(Color.purple.opacity(0.15))
+                                    .frame(width: geometry.size.width * 0.8)
+                                    .offset(x: animateBackground ? -geometry.size.width * 0.2 : geometry.size.width * 0.2,
+                                            y: animateBackground ? -geometry.size.height * 0.3 : geometry.size.height * 0.3)
+                                    .blur(radius: 50)
+                            }
+                            .onAppear {
+                                withAnimation(Animation.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
+                                    animateBackground.toggle()
+                                }
+                            }
+                        }
                         .ignoresSafeArea()
                         
-                        if clipboardManager.clipboardItems.isEmpty {
-                            // Boş durum görünümü
-                            VStack(spacing: 20) {
-                                Image(systemName: "doc.on.clipboard")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.gray)
-                                    .padding(.bottom, 10)
-                                
-                                Text("Henüz Kopyalanan Metin Yok")
-                                    .font(.title2)
-                                    .bold()
-                                    .foregroundColor(.primary)
-                                
-                                Text("Herhangi bir metni kopyaladığınızda\notomatik olarak burada listelenecek")
-                                    .font(.body)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        } else {
-                            // Kopyalanan metinler listesi
-                            ScrollView {
-                                LazyVStack(spacing: 12) {
-                                    ForEach(clipboardManager.clipboardItems) { item in
-                                        ClipboardItemView(item: item) {
-                                            UIPasteboard.general.string = item.text
-                                            selectedText = item.text
-                                            showingAlert = true
+                        VStack {
+                            if clipboardManager.clipboardItems.isEmpty {
+                                // Boş durum görünümü
+                                VStack(spacing: 24) {
+                                    Image(systemName: "doc.on.clipboard")
+                                        .font(.system(size: 70))
+                                        .foregroundColor(.blue.opacity(0.8))
+                                        .padding(.bottom, 10)
+                                        .shadow(color: .blue.opacity(0.2), radius: 10, x: 0, y: 5)
+                                    
+                                    Text("Henüz Kopyalanan Metin Yok")
+                                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("Herhangi bir metni kopyaladığınızda\notomatik olarak burada listelenecek")
+                                        .font(.body)
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(.secondary)
+                                        .padding(.horizontal, 20)
+                                    
+                                    Spacer()
+                                }
+                                .padding(.top, 60)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            } else {
+                                // Kopyalanan metinler listesi
+                                ScrollView {
+                                    LazyVStack(spacing: 16) {
+                                        ForEach(clipboardManager.clipboardItems) { item in
+                                            ClipboardItemView(item: item) {
+                                                UIPasteboard.general.string = item.text
+                                                showToastMessage("Kopyalandı: \(item.text)")
+                                            }
                                         }
                                     }
+                                    .padding(.horizontal)
+                                    .padding(.top, 10)
                                 }
-                                .padding()
+                                .refreshable {
+                                    // Yenileme animasyonu için boş işlem
+                                }
+                            }
+                            
+                            // Toast mesajı
+                            if showToast {
+                                ToastView(message: toastMessage)
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                                    .zIndex(1)
                             }
                         }
                     }
@@ -70,14 +98,16 @@ struct ContentView: View {
                         ToolbarItemGroup(placement: .navigationBarTrailing) {
                             if !clipboardManager.clipboardItems.isEmpty {
                                 Button(action: {
-                                    withAnimation {
+                                    withAnimation(.spring()) {
                                         clipboardManager.clipboardItems.removeAll()
                                         clipboardManager.userDefaults?.removeObject(forKey: "clipboardItems")
                                     }
                                 }) {
                                     Image(systemName: "trash")
                                         .foregroundColor(.red)
+                                        .font(.system(size: 16, weight: .medium))
                                 }
+                                .buttonStyle(ToolbarButtonStyle())
                             }
                             
                             Menu {
@@ -97,19 +127,47 @@ struct ContentView: View {
                                 }
                             } label: {
                                 Image(systemName: "ellipsis.circle")
+                                    .font(.system(size: 16, weight: .medium))
                             }
+                            .buttonStyle(ToolbarButtonStyle())
                         }
-                    }
-                    .alert(isPresented: $showingAlert) {
-                        Alert(
-                            title: Text("Kopyalandı"),
-                            message: Text(selectedText ?? ""),
-                            dismissButton: .default(Text("Tamam"))
-                        )
                     }
                 }
             }
         }
+    }
+    
+    private func showToastMessage(_ message: String) {
+        withAnimation {
+            self.toastMessage = message
+            self.showToast = true
+        }
+        
+        // 2 saniye sonra toast mesajını kaldır
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation {
+                self.showToast = false
+            }
+        }
+    }
+}
+
+struct ToastView: View {
+    let message: String
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        Text(message)
+            .font(.system(size: 16, weight: .medium))
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                Capsule()
+                    .fill(Color.black.opacity(0.8))
+                    .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+            )
+            .padding(.bottom, 20)
     }
 }
 
@@ -117,12 +175,13 @@ struct ClipboardItemView: View {
     let item: ClipboardItem
     let onTap: () -> Void
     @Environment(\.colorScheme) private var colorScheme
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(item.text)
-                    .font(.body)
+                    .font(.system(size: 16))
                     .foregroundColor(.primary)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
@@ -141,16 +200,37 @@ struct ClipboardItemView: View {
                     Image(systemName: "doc.on.doc")
                         .font(.caption)
                         .foregroundColor(.blue)
+                        .opacity(isPressed ? 0.7 : 1.0)
                 }
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(Color(colorScheme == .dark ? .systemGray6 : .white))
-                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
             )
         }
+        .buttonStyle(ClipboardItemButtonStyle())
+    }
+}
+
+struct ClipboardItemButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
+
+struct ToolbarButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(8)
+            .contentShape(Circle())
+            .opacity(configuration.isPressed ? 0.7 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
     }
 }
 

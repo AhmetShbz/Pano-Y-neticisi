@@ -15,6 +15,7 @@ struct OnboardingView: View {
     @ObservedObject var onboardingManager: OnboardingManager
     @State private var currentPage = 0
     @Environment(\.colorScheme) private var colorScheme
+    @State private var animateBackground = false
     
     var pages: [OnboardingPage] {
         [
@@ -63,27 +64,43 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            // Arka plan gradyanı
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.blue.opacity(colorScheme == .dark ? 0.1 : 0.05),
-                    Color.purple.opacity(colorScheme == .dark ? 0.1 : 0.05)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            // Animasyonlu arka plan
+            GeometryReader { geometry in
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.2))
+                        .frame(width: geometry.size.width * 0.6)
+                        .offset(x: animateBackground ? geometry.size.width * 0.3 : -geometry.size.width * 0.3,
+                                y: animateBackground ? geometry.size.height * 0.2 : -geometry.size.height * 0.2)
+                        .blur(radius: 60)
+                    
+                    Circle()
+                        .fill(Color.purple.opacity(0.2))
+                        .frame(width: geometry.size.width * 0.8)
+                        .offset(x: animateBackground ? -geometry.size.width * 0.2 : geometry.size.width * 0.2,
+                                y: animateBackground ? -geometry.size.height * 0.3 : geometry.size.height * 0.3)
+                        .blur(radius: 60)
+                }
+                .onAppear {
+                    withAnimation(Animation.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
+                        animateBackground.toggle()
+                    }
+                }
+            }
             .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // İlerleme göstergesi
-                HStack {
+                HStack(spacing: 8) {
                     ForEach(0..<pages.count, id: \.self) { index in
                         Capsule()
                             .fill(currentPage == index ? Color.blue : Color.gray.opacity(0.3))
-                            .frame(width: currentPage == index ? 20 : 7, height: 7)
+                            .frame(width: currentPage == index ? 24 : 8, height: 8)
+                            .animation(.spring(response: 0.3), value: currentPage)
                     }
                 }
-                .padding(.top)
+                .padding(.top, 20)
+                .padding(.bottom, 10)
                 
                 // Sayfa içeriği
                 TabView(selection: $currentPage) {
@@ -120,6 +137,7 @@ struct PageView: View {
     let page: OnboardingPage
     let colorScheme: ColorScheme
     let onContinue: () -> Void
+    @State private var isAnimating = false
     
     var body: some View {
         VStack(spacing: 25) {
@@ -130,12 +148,14 @@ struct PageView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.blue)
                 .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                .scaleEffect(isAnimating ? 1.1 : 0.9)
+                .animation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+                .onAppear { isAnimating = true }
             
             VStack(spacing: 16) {
                 // Başlık
                 Text(page.title)
-                    .font(.title)
-                    .bold()
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundColor(colorScheme == .dark ? .white : .primary)
                 
@@ -156,6 +176,7 @@ struct PageView: View {
                         .padding(.top, 8)
                 }
             }
+            .transition(.opacity)
             
             Spacer()
             
@@ -164,26 +185,27 @@ struct PageView: View {
                 Button(action: {
                     if let action = page.buttonAction {
                         action()
+                    } else {
+                        onContinue()
                     }
                 }) {
                     Text(buttonTitle)
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 16)
                         .background(
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 5, x: 0, y: 3)
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 8, x: 0, y: 4)
                 }
                 .padding(.horizontal, 30)
+                .scaleEffect(isAnimating ? 1.0 : 0.95)
             }
             
             // İleri butonu
@@ -191,10 +213,17 @@ struct PageView: View {
                 Button(action: onContinue) {
                     HStack {
                         Text("Devam Et")
+                            .fontWeight(.semibold)
                         Image(systemName: "chevron.right")
                     }
                     .foregroundColor(.blue)
                     .font(.headline)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(
+                        Capsule()
+                            .stroke(Color.blue, lineWidth: 2)
+                    )
                 }
                 .padding(.top, 10)
             }
@@ -203,11 +232,5 @@ struct PageView: View {
                 .frame(height: 20)
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(colorScheme == .dark ? .systemGray6 : .white))
-                .opacity(0.5)
-                .padding(.horizontal)
-        )
     }
 } 
