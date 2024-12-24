@@ -13,7 +13,9 @@ struct ContentView: View {
     
     var filteredItems: [ClipboardItem] {
         if searchText.isEmpty {
-            return clipboardManager.clipboardItems
+            let pinnedItems = clipboardManager.clipboardItems.filter { $0.isPinned }
+            let unpinnedItems = clipboardManager.clipboardItems.filter { !$0.isPinned }
+            return pinnedItems + unpinnedItems
         } else {
             return clipboardManager.clipboardItems.filter { item in
                 item.text.localizedCaseInsensitiveContains(searchText)
@@ -105,18 +107,39 @@ struct ContentView: View {
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 } else {
                                     // Kopyalanan metinler listesi
-                                    ScrollView {
-                                        LazyVStack(spacing: 16) {
-                                            ForEach(filteredItems) { item in
-                                                ClipboardItemView(item: item) {
-                                                    UIPasteboard.general.string = item.text
-                                                    showToastMessage("Kopyalandı: \(item.text)")
+                                    List {
+                                        ForEach(filteredItems) { item in
+                                            ClipboardItemView(item: item) {
+                                                UIPasteboard.general.string = item.text
+                                                showToastMessage("Kopyalandı: \(item.text)")
+                                            }
+                                            .listRowSeparator(.hidden)
+                                            .listRowBackground(Color.clear)
+                                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                                Button(role: .destructive) {
+                                                    withAnimation {
+                                                        deleteItem(item)
+                                                    }
+                                                } label: {
+                                                    Label("Sil", systemImage: "trash")
                                                 }
+                                                .tint(.red)
+                                            }
+                                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                                Button {
+                                                    withAnimation {
+                                                        togglePin(item)
+                                                    }
+                                                } label: {
+                                                    Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
+                                                          systemImage: item.isPinned ? "pin.slash" : "pin")
+                                                }
+                                                .tint(item.isPinned ? .gray : .blue)
                                             }
                                         }
-                                        .padding(.horizontal)
-                                        .padding(.top, 10)
                                     }
+                                    .listStyle(PlainListStyle())
                                     .refreshable {
                                         // Yenileme animasyonu için boş işlem
                                     }
@@ -188,6 +211,24 @@ struct ContentView: View {
             }
         }
     }
+    
+    private func deleteItem(_ item: ClipboardItem) {
+        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardManager.clipboardItems.remove(at: index)
+            clipboardManager.saveItems()
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            showToastMessage("Öğe silindi")
+        }
+    }
+    
+    private func togglePin(_ item: ClipboardItem) {
+        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardManager.clipboardItems[index].isPinned.toggle()
+            clipboardManager.saveItems()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showToastMessage(clipboardManager.clipboardItems[index].isPinned ? "Sabitlendi" : "Sabitleme kaldırıldı")
+        }
+    }
 }
 
 struct SearchBar: View {
@@ -257,11 +298,20 @@ struct ClipboardItemView: View {
             onTap()
         }) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(item.text)
-                    .font(.system(size: 16))
-                    .foregroundColor(.primary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+                HStack(alignment: .top, spacing: 8) {
+                    Text(item.text)
+                        .font(.system(size: 16))
+                        .foregroundColor(.primary)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                    
+                    if item.isPinned {
+                        Image(systemName: "pin.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.blue)
+                            .rotationEffect(.degrees(45))
+                    }
+                }
                 
                 HStack(spacing: 8) {
                     Image(systemName: "clock")

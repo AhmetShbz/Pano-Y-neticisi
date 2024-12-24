@@ -6,11 +6,13 @@ public struct ClipboardItem: Identifiable, Codable {
     public let id: UUID
     public let text: String
     public let date: Date
+    public var isPinned: Bool
     
     public init(text: String) {
         self.id = UUID()
         self.text = text
         self.date = Date()
+        self.isPinned = false
     }
 }
 
@@ -84,7 +86,7 @@ public class ClipboardManager: ObservableObject {
         }
     }
     
-    private func saveItems() {
+    public func saveItems() {
         if let data = try? JSONEncoder().encode(clipboardItems) {
             userDefaults?.set(data, forKey: "clipboardItems")
         }
