@@ -66,8 +66,8 @@ struct OnboardingView: View {
             // Arka plan gradyanı
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color.blue.opacity(colorScheme == .dark ? 0.2 : 0.1),
-                    Color.purple.opacity(colorScheme == .dark ? 0.2 : 0.1)
+                    Color.blue.opacity(colorScheme == .dark ? 0.1 : 0.05),
+                    Color.purple.opacity(colorScheme == .dark ? 0.1 : 0.05)
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -88,7 +88,7 @@ struct OnboardingView: View {
                 // Sayfa içeriği
                 TabView(selection: $currentPage) {
                     ForEach(pages.indices, id: \.self) { index in
-                        PageView(page: pages[index]) {
+                        PageView(page: pages[index], colorScheme: colorScheme) {
                             if currentPage < pages.count - 1 {
                                 withAnimation {
                                     currentPage += 1
@@ -101,7 +101,6 @@ struct OnboardingView: View {
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
         }
-        .preferredColorScheme(.light)
     }
     
     private func openKeyboardSettings() {
@@ -119,6 +118,7 @@ struct OnboardingView: View {
 
 struct PageView: View {
     let page: OnboardingPage
+    let colorScheme: ColorScheme
     let onContinue: () -> Void
     
     var body: some View {
@@ -137,6 +137,7 @@ struct PageView: View {
                     .font(.title)
                     .bold()
                     .multilineTextAlignment(.center)
+                    .foregroundColor(colorScheme == .dark ? .white : .primary)
                 
                 // Ana açıklama
                 Text(page.description)
@@ -179,7 +180,7 @@ struct PageView: View {
                                         endPoint: .trailing
                                     )
                                 )
-                                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
+                                .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 5, x: 0, y: 3)
                         )
                 }
                 .padding(.horizontal, 30)
@@ -202,5 +203,11 @@ struct PageView: View {
                 .frame(height: 20)
         }
         .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(colorScheme == .dark ? .systemGray6 : .white))
+                .opacity(0.5)
+                .padding(.horizontal)
+        )
     }
 } 
