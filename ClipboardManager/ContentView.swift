@@ -63,8 +63,17 @@ struct ContentView: View {
                     .listStyle(InsetGroupedListStyle())
                     .navigationTitle("Pano Geçmişi")
                     .toolbar {
-                        if !clipboardManager.clipboardItems.isEmpty {
-                            EditButton()
+                        ToolbarItemGroup(placement: .navigationBarTrailing) {
+                            if !clipboardManager.clipboardItems.isEmpty {
+                                EditButton()
+                            }
+                            
+                            Button(action: {
+                                UserDefaults.standard.removeObject(forKey: "isOnboardingCompleted")
+                                onboardingManager.isOnboardingCompleted = false
+                            }) {
+                                Image(systemName: "arrow.clockwise.circle")
+                            }
                         }
                     }
                     .alert(isPresented: $showingAlert) {
