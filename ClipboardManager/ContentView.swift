@@ -291,6 +291,9 @@ struct ClipboardItemView: View {
     let onTap: () -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var isPressed = false
+    @State private var showEditSheet = false
+    @State private var editedText = ""
+    @StateObject private var clipboardManager = ClipboardManager.shared
     
     var body: some View {
         Button(action: {
@@ -324,10 +327,58 @@ struct ClipboardItemView: View {
                     
                     Spacer()
                     
-                    Image(systemName: "doc.on.doc")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                        .opacity(isPressed ? 0.7 : 1.0)
+                    HStack(spacing: 12) {
+                        // Düzenle butonu
+                        Button(action: {
+                            editedText = item.text
+                            showEditSheet = true
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 14))
+                                Text("Düzenle")
+                                    .font(.system(size: 14))
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(
+                                Capsule()
+                                    .fill(Color.blue.opacity(0.1))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Paylaş butonu
+                        Button(action: {
+                            let activityVC = UIActivityViewController(
+                                activityItems: [item.text],
+                                applicationActivities: nil
+                            )
+                            
+                            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                               let window = windowScene.windows.first,
+                               let rootVC = window.rootViewController {
+                                activityVC.popoverPresentationController?.sourceView = rootVC.view
+                                rootVC.present(activityVC, animated: true)
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 14))
+                                Text("Paylaş")
+                                    .font(.system(size: 14))
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(
+                                Capsule()
+                                    .fill(Color.blue.opacity(0.1))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
             .padding()
@@ -339,6 +390,32 @@ struct ClipboardItemView: View {
             )
         }
         .buttonStyle(ClipboardItemButtonStyle())
+        .sheet(isPresented: $showEditSheet) {
+            NavigationView {
+                VStack {
+                    TextEditor(text: $editedText)
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+                    Spacer()
+                }
+                .navigationTitle("Metni Düzenle")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("İptal") {
+                            showEditSheet = false
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Kaydet") {
+                            clipboardManager.updateItem(item, newText: editedText)
+                            showEditSheet = false
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

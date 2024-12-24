@@ -4,7 +4,7 @@ import UIKit
 
 public struct ClipboardItem: Identifiable, Codable {
     public let id: UUID
-    public let text: String
+    public var text: String
     public let date: Date
     public var isPinned: Bool
     
@@ -90,6 +90,17 @@ public class ClipboardManager: ObservableObject {
         if let data = try? JSONEncoder().encode(clipboardItems) {
             userDefaults?.set(data, forKey: "clipboardItems")
         }
+    }
+    
+    public func updateItem(_ item: ClipboardItem, newText: String) {
+        if let index = clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardItems[index].text = newText
+            saveItems()
+        }
+    }
+    
+    public func shareItem(_ item: ClipboardItem) {
+        // Paylaşım işlemi view tarafında yapılacak
     }
     
     deinit {
