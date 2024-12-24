@@ -6,7 +6,7 @@ options:
 
 settings:
   base:
-    DEVELOPMENT_TEAM: "Personal Team"
+    DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
     CODE_SIGN_ENTITLEMENTS: ""
@@ -27,7 +27,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmtcanx.clipboardmanager
-        DEVELOPMENT_TEAM: "Personal Team"
+        DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: ClipboardManager/ClipboardManager.entitlements
     dependencies:
@@ -60,7 +60,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmtcanx.clipboardmanager.keyboard
-        DEVELOPMENT_TEAM: "Personal Team"
+        DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: KeyboardExtension/KeyboardExtension.entitlements
     dependencies:
