@@ -32,10 +32,10 @@ struct OnboardingView: View {
             OnboardingPage(
                 image: "doc.on.clipboard",
                 title: "Kurulum Adımları 📝",
-                description: "1️⃣ 'Klavyeler'e dokunun\n2️⃣ 'Yeni Klavye Ekle' seçeneğine gidin\n3️⃣ 'Pano Yöneticisi'ni bulun\n4️⃣ Klavyeyi etkinleştirin\n5️⃣ Tam Erişim'i açın",
+                description: "1️⃣ Ayarlar > Klavye > Klavyeler\n2️⃣ 'Yeni Klavye Ekle' > Pano Yöneticisi\n3️⃣ Tam Erişim'i Etkinleştir",
                 buttonTitle: "Klavye Ayarlarını Aç",
                 buttonAction: openKeyboardSettings,
-                secondaryDescription: "🔒 Tam Erişim izni sadece pano içeriğine erişmek için kullanılacak.\n✨ Ayarlar > Klavye > Klavyeler > Yeni Klavye Ekle"
+                secondaryDescription: "🔒 Tam Erişim izni sadece kopyaladığınız metinlere erişmek için kullanılır ve verileriniz güvende kalır."
             ),
             OnboardingPage(
                 image: "checkmark.seal.fill",
