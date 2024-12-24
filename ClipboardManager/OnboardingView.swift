@@ -26,7 +26,7 @@ struct OnboardingView: View {
                 secondaryDescription: "Hızlı ve kolay kullanım için klavye eklentimizi kuralım."
             ),
             OnboardingPage(
-                image: "keyboard.badge.eye",
+                image: "keyboard.badge.eye.fill",
                 title: "Klavye Eklentisi",
                 description: "Klavye eklentimiz sayesinde kopyaladığınız metinlere her uygulamada kolayca erişebilirsiniz.",
                 buttonTitle: "Klavye Ayarlarını Aç",
@@ -34,7 +34,7 @@ struct OnboardingView: View {
                 secondaryDescription: "Ayarlar > Klavye > Klavyeler > Yeni Klavye Ekle"
             ),
             OnboardingPage(
-                image: "arrow.right.doc.on.clipboard",
+                image: "arrow.right.doc.on.clipboard.fill",
                 title: "Kurulum Adımları",
                 description: "1️⃣ 'Klavyeler'e dokunun\n2️⃣ 'Yeni Klavye Ekle' seçeneğine gidin\n3️⃣ 'Pano Yöneticisi'ni bulun\n4️⃣ Klavyeyi etkinleştirin",
                 buttonTitle: "Anladım, Devam Et",
@@ -61,14 +61,19 @@ struct OnboardingView: View {
     }
     
     var body: some View {
+        @Environment(\.colorScheme) var colorScheme
+        
         ZStack {
             // Arka plan gradyanı
             LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                gradient: Gradient(colors: [
+                    Color.blue.opacity(colorScheme == .dark ? 0.2 : 0.1),
+                    Color.purple.opacity(colorScheme == .dark ? 0.2 : 0.1)
+                ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            .edgesIgnoringSafeArea(.all)
+            .ignoresSafeArea()
             
             VStack {
                 // İlerleme göstergesi
@@ -77,7 +82,7 @@ struct OnboardingView: View {
                         Capsule()
                             .fill(currentPage == index ? Color.blue : Color.gray.opacity(0.3))
                             .frame(width: currentPage == index ? 20 : 7, height: 7)
-                            .animation(.spring(), value: currentPage)
+                            .contentTransition(.interpolate)
                     }
                 }
                 .padding(.top)
@@ -92,6 +97,8 @@ struct OnboardingView: View {
                             Image(systemName: pages[index].image)
                                 .font(.system(size: 80))
                                 .foregroundColor(.blue)
+                                .symbolRenderingMode(.hierarchical)
+                                .symbolEffect(.bounce, value: currentPage)
                                 .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
                             
                             VStack(spacing: 16) {
@@ -133,17 +140,20 @@ struct OnboardingView: View {
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .cornerRadius(15)
-                                        .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
+                                        .background {
+                                            RoundedRectangle(cornerRadius: 15)
+                                                .fill(
+                                                    LinearGradient(
+                                                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                                        startPoint: .leading,
+                                                        endPoint: .trailing
+                                                    )
+                                                )
+                                                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
+                                        }
                                 }
                                 .padding(.horizontal, 30)
+                                .buttonStyle(.bounce)
                             }
                             
                             // İleri butonu (son sayfada gizli)
@@ -161,6 +171,7 @@ struct OnboardingView: View {
                                     .font(.headline)
                                 }
                                 .padding(.top, 10)
+                                .buttonStyle(.bounce)
                             }
                             
                             Spacer()
@@ -173,6 +184,7 @@ struct OnboardingView: View {
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
         }
+        .preferredColorScheme(.light)
     }
     
     private func openKeyboardSettings() {

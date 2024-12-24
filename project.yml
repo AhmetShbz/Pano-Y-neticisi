@@ -2,11 +2,11 @@ name: ClipboardManager
 options:
   bundleIdPrefix: com.ahmtcanx
   deploymentTarget:
-    iOS: 14.0
+    iOS: 17.0
 
 settings:
   base:
-    DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
+    DEVELOPMENT_TEAM: "Ahmet şahbazoğlu (Personal Team)"
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
     CODE_SIGN_ENTITLEMENTS: ""
@@ -27,7 +27,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmtcanx.clipboardmanager
-        DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
+        DEVELOPMENT_TEAM: "Ahmet şahbazoğlu (Personal Team)"
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: ClipboardManager/ClipboardManager.entitlements
     dependencies:
@@ -60,7 +60,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmtcanx.clipboardmanager.keyboard
-        DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
+        DEVELOPMENT_TEAM: "Ahmet şahbazoğlu (Personal Team)"
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: KeyboardExtension/KeyboardExtension.entitlements
     dependencies:
