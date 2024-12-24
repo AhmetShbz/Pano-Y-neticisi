@@ -77,7 +77,10 @@ struct KeyboardClipboardItemView: View {
     @State private var isPressed = false
     
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            onTap()
+        }) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(item.text)
                     .font(.system(size: 15))

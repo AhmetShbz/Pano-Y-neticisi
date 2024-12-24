@@ -8,7 +8,18 @@ struct ContentView: View {
     @State private var toastMessage = ""
     @State private var showSettings = false
     @State private var animateBackground = false
+    @State private var searchText = ""
     @Environment(\.colorScheme) private var colorScheme
+    
+    var filteredItems: [ClipboardItem] {
+        if searchText.isEmpty {
+            return clipboardManager.clipboardItems
+        } else {
+            return clipboardManager.clipboardItems.filter { item in
+                item.text.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
     
     var body: some View {
         Group {
@@ -42,7 +53,14 @@ struct ContentView: View {
                         }
                         .ignoresSafeArea()
                         
-                        VStack {
+                        VStack(spacing: 0) {
+                            if !clipboardManager.clipboardItems.isEmpty {
+                                // Arama alanı
+                                SearchBar(text: $searchText)
+                                    .padding(.horizontal)
+                                    .padding(.top, 10)
+                            }
+                            
                             if clipboardManager.clipboardItems.isEmpty {
                                 // Boş durum görünümü
                                 VStack(spacing: 24) {
@@ -67,21 +85,41 @@ struct ContentView: View {
                                 .padding(.top, 60)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                             } else {
-                                // Kopyalanan metinler listesi
-                                ScrollView {
-                                    LazyVStack(spacing: 16) {
-                                        ForEach(clipboardManager.clipboardItems) { item in
-                                            ClipboardItemView(item: item) {
-                                                UIPasteboard.general.string = item.text
-                                                showToastMessage("Kopyalandı: \(item.text)")
+                                if filteredItems.isEmpty {
+                                    // Arama sonucu boş durumu
+                                    VStack(spacing: 16) {
+                                        Image(systemName: "magnifyingglass")
+                                            .font(.system(size: 40))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text("Sonuç Bulunamadı")
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundColor(.primary)
+                                        
+                                        Text("\"\(searchText)\" ile eşleşen bir sonuç yok")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.secondary)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                    .padding(.top, 60)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                } else {
+                                    // Kopyalanan metinler listesi
+                                    ScrollView {
+                                        LazyVStack(spacing: 16) {
+                                            ForEach(filteredItems) { item in
+                                                ClipboardItemView(item: item) {
+                                                    UIPasteboard.general.string = item.text
+                                                    showToastMessage("Kopyalandı: \(item.text)")
+                                                }
                                             }
                                         }
+                                        .padding(.horizontal)
+                                        .padding(.top, 10)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.top, 10)
-                                }
-                                .refreshable {
-                                    // Yenileme animasyonu için boş işlem
+                                    .refreshable {
+                                        // Yenileme animasyonu için boş işlem
+                                    }
                                 }
                             }
                             
@@ -101,6 +139,7 @@ struct ContentView: View {
                                     withAnimation(.spring()) {
                                         clipboardManager.clipboardItems.removeAll()
                                         clipboardManager.userDefaults?.removeObject(forKey: "clipboardItems")
+                                        searchText = "" // Temizleme işleminde arama metnini de sıfırla
                                     }
                                 }) {
                                     Image(systemName: "trash")
@@ -143,12 +182,47 @@ struct ContentView: View {
             self.showToast = true
         }
         
-        // 2 saniye sonra toast mesajını kaldır
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             withAnimation {
                 self.showToast = false
             }
         }
+    }
+}
+
+struct SearchBar: View {
+    @Binding var text: String
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            TextField("Metinlerde Ara...", text: $text)
+                .font(.system(size: 16))
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+            
+            if !text.isEmpty {
+                Button(action: {
+                    withAnimation {
+                        text = ""
+                    }
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(colorScheme == .dark ? .systemGray6 : .systemGray6))
+        )
     }
 }
 
@@ -178,7 +252,10 @@ struct ClipboardItemView: View {
     @State private var isPressed = false
     
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            onTap()
+        }) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(item.text)
                     .font(.system(size: 16))
