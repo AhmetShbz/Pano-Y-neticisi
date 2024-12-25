@@ -41,7 +41,7 @@ struct ClipboardView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Geri dönüş tuşu
+                // Header
                 HStack {
                     Button(action: onDismiss) {
                         HStack(spacing: 6) {
@@ -60,6 +60,12 @@ struct ClipboardView: View {
                     .padding(.vertical, 8)
                     
                     Spacer()
+                    
+                    // Başlık
+                    Text("Pano Yöneticisi")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .padding(.trailing, 12)
                 }
                 .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white)
                 
