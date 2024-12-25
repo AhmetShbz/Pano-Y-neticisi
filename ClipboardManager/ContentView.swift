@@ -109,10 +109,10 @@ struct ContentView: View {
                                     // Kopyalanan metinler listesi
                                     List {
                                         ForEach(filteredItems) { item in
-                                            ClipboardItemView(item: item) {
-                                                UIPasteboard.general.string = item.text
-                                                showToastMessage("Kopyalandı: \(item.text)")
-                                            }
+                                            ClipboardItemView(
+                                                item: item,
+                                                showToastMessage: showToastMessage
+                                            )
                                             .listRowSeparator(.hidden)
                                             .listRowBackground(Color.clear)
                                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -288,7 +288,7 @@ struct ToastView: View {
 
 struct ClipboardItemView: View {
     let item: ClipboardItem
-    let onTap: () -> Void
+    let showToastMessage: (String) -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var isPressed = false
     @State private var showEditSheet = false
@@ -298,7 +298,8 @@ struct ClipboardItemView: View {
     var body: some View {
         Button(action: {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            onTap()
+            UIPasteboard.general.string = item.text
+            showToastMessage("Kopyalandı")
         }) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 8) {
@@ -327,58 +328,10 @@ struct ClipboardItemView: View {
                     
                     Spacer()
                     
-                    HStack(spacing: 12) {
-                        // Düzenle butonu
-                        Button(action: {
-                            editedText = item.text
-                            showEditSheet = true
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 14))
-                                Text("Düzenle")
-                                    .font(.system(size: 14))
-                            }
-                            .foregroundColor(.blue)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 10)
-                            .background(
-                                Capsule()
-                                    .fill(Color.blue.opacity(0.1))
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        
-                        // Paylaş butonu
-                        Button(action: {
-                            let activityVC = UIActivityViewController(
-                                activityItems: [item.text],
-                                applicationActivities: nil
-                            )
-                            
-                            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                               let window = windowScene.windows.first,
-                               let rootVC = window.rootViewController {
-                                activityVC.popoverPresentationController?.sourceView = rootVC.view
-                                rootVC.present(activityVC, animated: true)
-                            }
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.system(size: 14))
-                                Text("Paylaş")
-                                    .font(.system(size: 14))
-                            }
-                            .foregroundColor(.blue)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 10)
-                            .background(
-                                Capsule()
-                                    .fill(Color.blue.opacity(0.1))
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    Image(systemName: "doc.on.doc")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .opacity(isPressed ? 0.7 : 1.0)
                 }
             }
             .padding()
@@ -390,6 +343,30 @@ struct ClipboardItemView: View {
             )
         }
         .buttonStyle(ClipboardItemButtonStyle())
+        .contextMenu {
+            Button(action: {
+                editedText = item.text
+                showEditSheet = true
+            }) {
+                Label("Düzenle", systemImage: "pencil")
+            }
+            
+            Button(action: {
+                let activityVC = UIActivityViewController(
+                    activityItems: [item.text],
+                    applicationActivities: nil
+                )
+                
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first,
+                   let rootVC = window.rootViewController {
+                    activityVC.popoverPresentationController?.sourceView = rootVC.view
+                    rootVC.present(activityVC, animated: true)
+                }
+            }) {
+                Label("Paylaş", systemImage: "square.and.arrow.up")
+            }
+        }
         .sheet(isPresented: $showEditSheet) {
             NavigationView {
                 VStack {
