@@ -54,7 +54,7 @@ struct ClipboardView: View {
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: true) {
                     LazyVStack(spacing: 8) {
                         ForEach(clipboardManager.clipboardItems) { item in
                             ClipboardItemView(item: item) {
@@ -62,10 +62,13 @@ struct ClipboardView: View {
                                 onItemSelected(item.text)
                             }
                         }
+                        Color.clear.frame(height: 50)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                 }
+                .scrollDismissesKeyboard(.never)
+                .scrollIndicators(.visible)
             }
         }
     }
