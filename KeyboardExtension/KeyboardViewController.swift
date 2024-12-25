@@ -3,24 +3,50 @@ import SwiftUI
 
 class KeyboardViewController: UIInputViewController {
     private var clipboardManager = ClipboardManager.shared
-    private var heightConstraint: NSLayoutConstraint?
     private var clipboardView: UIHostingController<ClipboardView>?
-    private var isClipboardViewVisible = false
     private var updateTimer: Timer?
     private var lastPasteboardChangeCount: Int = 0
-    private let keyboardHeight: CGFloat = 300 // Sabit klavye yüksekliği
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupKeyboardView()
-        setupClipboardObservers()
         
-        // İlk açılışta pano durumunu kaydet
+        let hostingController = UIHostingController(
+            rootView: ClipboardView(
+                clipboardManager: ClipboardManager.shared,
+                onItemSelected: { [weak self] text in
+                    self?.textDocumentProxy.insertText(text)
+                }
+            )
+        )
+        
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.didMove(toParent: self)
+        
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        // Klavye yüksekliğini ayarla
+        view.heightAnchor.constraint(equalToConstant: 400).isActive = true
+        
+        setupClipboardObservers()
         lastPasteboardChangeCount = UIPasteboard.general.changeCount
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Her görünüm öncesi yüksekliği güncelle
+        if let inputView = view as? UIInputView {
+            inputView.frame.size.height = 400
+        }
+    }
+    
     private func setupClipboardObservers() {
-        // Pano değişikliklerini dinle
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(checkPasteboardChanges),
@@ -28,7 +54,6 @@ class KeyboardViewController: UIInputViewController {
             object: nil
         )
         
-        // Timer'ı başlat (her 0.5 saniyede bir kontrol et)
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkPasteboardChanges()
         }
@@ -49,9 +74,8 @@ class KeyboardViewController: UIInputViewController {
         }
     }
     
-    @objc private func refreshClipboardItems() {
+    private func refreshClipboardItems() {
         clipboardManager.loadItems()
-        // SwiftUI view'ı güncelle
         if let clipboardView = clipboardView {
             clipboardView.rootView = ClipboardView(clipboardManager: clipboardManager) { [weak self] text in
                 self?.insertText(text)
@@ -62,44 +86,6 @@ class KeyboardViewController: UIInputViewController {
     deinit {
         updateTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
-    }
-    
-    private func setupKeyboardView() {
-        // Klavye arka plan görünümü
-        view.backgroundColor = .systemBackground
-        
-        // Container view
-        let containerView = UIView()
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(containerView)
-        
-        // Container view constraints
-        NSLayoutConstraint.activate([
-            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            containerView.topAnchor.constraint(equalTo: view.topAnchor),
-            containerView.heightAnchor.constraint(equalToConstant: keyboardHeight)
-        ])
-        
-        // SwiftUI view'ı oluştur
-        let clipboardView = UIHostingController(rootView: ClipboardView(clipboardManager: clipboardManager) { [weak self] text in
-            self?.insertText(text)
-        })
-        self.clipboardView = clipboardView
-        
-        // SwiftUI view'ı container'a ekle
-        addChild(clipboardView)
-        containerView.addSubview(clipboardView.view)
-        clipboardView.view.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            clipboardView.view.topAnchor.constraint(equalTo: containerView.topAnchor),
-            clipboardView.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            clipboardView.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            clipboardView.view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
-        ])
-        
-        clipboardView.didMove(toParent: self)
     }
     
     private func insertText(_ text: String) {
