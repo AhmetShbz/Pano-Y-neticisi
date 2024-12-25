@@ -55,17 +55,17 @@ struct ClipboardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView(.vertical, showsIndicators: true) {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: 12) {
                         ForEach(clipboardManager.clipboardItems) { item in
                             ClipboardItemView(item: item) {
                                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                 onItemSelected(item.text)
                             }
                         }
-                        Color.clear.frame(height: 50)
+                        Color.clear.frame(height: 80)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
                 .scrollDismissesKeyboard(.never)
                 .scrollIndicators(.visible)
@@ -82,33 +82,33 @@ struct ClipboardItemView: View {
     
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
                     Image(systemName: getSystemImage(for: item.text))
-                        .font(.system(size: 14))
+                        .font(.system(size: 16))
                         .foregroundColor(.blue)
                     
                     Text(getItemType(for: item.text))
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundColor(.secondary)
                     
                     Spacer()
                     
                     Text(timeAgoDisplay(date: item.date))
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundColor(.secondary)
                 }
                 
                 Text(item.text)
                     .lineLimit(2)
-                    .font(.system(size: 15))
+                    .font(.system(size: 16))
                     .foregroundColor(.primary)
             }
-            .padding(12)
+            .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.7))
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+            .cornerRadius(14)
+            .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
         }
     }
     
