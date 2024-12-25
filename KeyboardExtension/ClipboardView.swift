@@ -12,18 +12,18 @@ struct ClipboardView: View {
             GeometryReader { geometry in
                 ZStack {
                     Circle()
-                        .fill(Color.blue.opacity(0.1))
+                        .fill(Color.blue.opacity(0.08))
                         .frame(width: geometry.size.width * 0.6)
                         .offset(x: animateBackground ? geometry.size.width * 0.3 : -geometry.size.width * 0.3,
                                 y: animateBackground ? geometry.size.height * 0.2 : -geometry.size.height * 0.2)
-                        .blur(radius: 40)
+                        .blur(radius: 60)
                     
                     Circle()
-                        .fill(Color.purple.opacity(0.1))
+                        .fill(Color.purple.opacity(0.08))
                         .frame(width: geometry.size.width * 0.8)
                         .offset(x: animateBackground ? -geometry.size.width * 0.2 : geometry.size.width * 0.2,
-                                y: animateBackground ? -geometry.size.height * 0.3 : geometry.size.height * 0.3)
-                        .blur(radius: 40)
+                                y: animateBackground ? -geometry.size.height * 0.2 : geometry.size.height * 0.2)
+                        .blur(radius: 60)
                 }
                 .onAppear {
                     withAnimation(Animation.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
@@ -86,7 +86,7 @@ struct ClipboardItemView: View {
                 HStack(spacing: 8) {
                     Image(systemName: getSystemImage(for: item.text))
                         .font(.system(size: 16))
-                        .foregroundColor(.blue)
+                        .foregroundColor(.blue.opacity(0.8))
                     
                     Text(getItemType(for: item.text))
                         .font(.system(size: 13))
@@ -106,9 +106,13 @@ struct ClipboardItemView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.7))
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(colorScheme == .dark ? Color.black.opacity(0.15) : Color.white.opacity(0.5))
+                    .background(.ultraThinMaterial)
+            )
             .cornerRadius(14)
-            .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
     }
     
