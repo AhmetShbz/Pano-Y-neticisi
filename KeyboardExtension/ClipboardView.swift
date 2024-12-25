@@ -44,23 +44,24 @@ struct ClipboardView: View {
                 // Geri dönüş tuşu
                 HStack {
                     Button(action: onDismiss) {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "keyboard.chevron.compact.down")
-                                .font(.system(size: 18, weight: .medium))
+                                .font(.system(size: 17))
                             Text("Klavye")
-                                .font(.system(size: 15, weight: .medium))
+                                .font(.system(size: 15))
                         }
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
+                        .cornerRadius(6)
                     }
-                    .padding(.leading, 16)
-                    .padding(.top, 8)
+                    .padding(.leading, 12)
+                    .padding(.vertical, 8)
                     
                     Spacer()
                 }
+                .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white)
                 
                 if clipboardManager.clipboardItems.isEmpty {
                     // Boş durum görünümü
