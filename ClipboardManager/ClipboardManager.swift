@@ -2,6 +2,11 @@ import Foundation
 import SwiftUI
 import UIKit
 
+// Bildirim adını tanımla
+public extension Notification.Name {
+    static let clipboardItemAdded = Notification.Name("clipboardItemAdded")
+}
+
 public struct ClipboardItem: Identifiable, Codable {
     public let id: UUID
     public var text: String
@@ -76,9 +81,12 @@ public class ClipboardManager: ObservableObject {
         }
         
         saveItems()
+        
+        // Bildirim yayınla
+        NotificationCenter.default.post(name: .clipboardItemAdded, object: nil)
     }
     
-    private func loadItems() {
+    public func loadItems() {
         if let data = userDefaults?.data(forKey: "clipboardItems"),
            let items = try? JSONDecoder().decode([ClipboardItem].self, from: data) {
             clipboardItems = items

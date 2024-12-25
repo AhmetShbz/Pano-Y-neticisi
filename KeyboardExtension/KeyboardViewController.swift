@@ -6,11 +6,63 @@ class KeyboardViewController: UIInputViewController {
     private var heightConstraint: NSLayoutConstraint?
     private var clipboardView: UIHostingController<ClipboardView>?
     private var isClipboardViewVisible = false
+    private var updateTimer: Timer?
+    private var lastPasteboardChangeCount: Int = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupKeyboardView()
         setupGestureRecognizer()
+        setupClipboardObservers()
+        
+        // İlk açılışta pano durumunu kaydet
+        lastPasteboardChangeCount = UIPasteboard.general.changeCount
+    }
+    
+    private func setupClipboardObservers() {
+        // Pano değişikliklerini dinle
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(checkPasteboardChanges),
+            name: UIPasteboard.changedNotification,
+            object: nil
+        )
+        
+        // Timer'ı başlat (her 0.5 saniyede bir kontrol et)
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.checkPasteboardChanges()
+        }
+    }
+    
+    @objc private func checkPasteboardChanges() {
+        let currentChangeCount = UIPasteboard.general.changeCount
+        
+        if currentChangeCount != lastPasteboardChangeCount {
+            lastPasteboardChangeCount = currentChangeCount
+            
+            if let text = UIPasteboard.general.string, !text.isEmpty {
+                DispatchQueue.main.async { [weak self] in
+                    self?.clipboardManager.addItem(text)
+                    self?.refreshClipboardItems()
+                }
+            }
+        }
+    }
+    
+    @objc private func refreshClipboardItems() {
+        clipboardManager.loadItems()
+        // SwiftUI view'ı güncelle
+        if let clipboardView = clipboardView {
+            clipboardView.rootView = ClipboardView(clipboardManager: clipboardManager) { [weak self] text in
+                self?.insertText(text)
+                self?.hideClipboardView()
+            }
+        }
+    }
+    
+    deinit {
+        updateTimer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setupKeyboardView() {
