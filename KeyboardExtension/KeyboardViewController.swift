@@ -10,6 +10,12 @@ class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupKeyboardView()
+        setupClipboardObservers()
+        lastPasteboardChangeCount = UIPasteboard.general.changeCount
+    }
+    
+    private func setupKeyboardView() {
         let hostingController = UIHostingController(
             rootView: ClipboardView(
                 clipboardManager: ClipboardManager.shared,
@@ -18,6 +24,7 @@ class KeyboardViewController: UIInputViewController {
                 }
             )
         )
+        self.clipboardView = hostingController
         
         addChild(hostingController)
         view.addSubview(hostingController.view)
@@ -31,26 +38,32 @@ class KeyboardViewController: UIInputViewController {
             hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        // Klavye yüksekliğini ayarla
-        view.heightAnchor.constraint(equalToConstant: 400).isActive = true
-        
-        setupClipboardObservers()
-        lastPasteboardChangeCount = UIPasteboard.general.changeCount
+        view.heightAnchor.constraint(equalToConstant: 350).isActive = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Her görünüm öncesi yüksekliği güncelle
         if let inputView = view as? UIInputView {
-            inputView.frame.size.height = 400
+            inputView.frame.size.height = 350
         }
+        clipboardManager.loadItems()
+        updateKeyboardView()
     }
     
     private func setupClipboardObservers() {
+        // Pano değişikliklerini dinle
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(checkPasteboardChanges),
             name: UIPasteboard.changedNotification,
+            object: nil
+        )
+        
+        // ClipboardManager değişikliklerini dinle
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleClipboardManagerChanges),
+            name: ClipboardManager.clipboardChangedNotification,
             object: nil
         )
         
@@ -68,27 +81,32 @@ class KeyboardViewController: UIInputViewController {
             if let text = UIPasteboard.general.string, !text.isEmpty {
                 DispatchQueue.main.async { [weak self] in
                     self?.clipboardManager.addItem(text)
-                    self?.refreshClipboardItems()
+                    self?.updateKeyboardView()
                 }
             }
         }
     }
     
-    private func refreshClipboardItems() {
-        clipboardManager.loadItems()
+    @objc private func handleClipboardManagerChanges() {
+        DispatchQueue.main.async { [weak self] in
+            self?.clipboardManager.loadItems()
+            self?.updateKeyboardView()
+        }
+    }
+    
+    private func updateKeyboardView() {
         if let clipboardView = clipboardView {
-            clipboardView.rootView = ClipboardView(clipboardManager: clipboardManager) { [weak self] text in
-                self?.insertText(text)
-            }
+            clipboardView.rootView = ClipboardView(
+                clipboardManager: clipboardManager,
+                onItemSelected: { [weak self] text in
+                    self?.textDocumentProxy.insertText(text)
+                }
+            )
         }
     }
     
     deinit {
         updateTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
-    }
-    
-    private func insertText(_ text: String) {
-        textDocumentProxy.insertText(text)
     }
 } 

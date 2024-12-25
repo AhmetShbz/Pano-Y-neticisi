@@ -102,20 +102,26 @@ struct ClipboardView: View {
                 .background(Color.clear)
             }
         }
+        .onAppear {
+            // ClipboardManager değişikliklerini dinle
+            NotificationCenter.default.addObserver(
+                forName: ClipboardManager.clipboardChangedNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                clipboardManager.loadItems()
+            }
+        }
     }
     
     private func deleteItem(_ item: ClipboardItem) {
-        clipboardManager.clipboardItems.removeAll(where: { $0.id == item.id })
-        clipboardManager.saveItems()
+        clipboardManager.deleteItem(item)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     
     private func togglePin(_ item: ClipboardItem) {
-        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
-            clipboardManager.clipboardItems[index].isPinned.toggle()
-            clipboardManager.saveItems()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        }
+        clipboardManager.togglePinItem(item)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 }
 

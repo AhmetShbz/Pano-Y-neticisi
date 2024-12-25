@@ -204,6 +204,16 @@ struct ContentView: View {
                 }
             }
         }
+        .onAppear {
+            // ClipboardManager değişikliklerini dinle
+            NotificationCenter.default.addObserver(
+                forName: ClipboardManager.clipboardChangedNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                clipboardManager.loadItems()
+            }
+        }
         .sheet(isPresented: $showAboutSheet) {
             NavigationView {
                 List {
@@ -296,21 +306,15 @@ struct ContentView: View {
     }
     
     private func deleteItem(_ item: ClipboardItem) {
-        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
-            clipboardManager.clipboardItems.remove(at: index)
-            clipboardManager.saveItems()
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            showToastMessage("Öğe silindi")
-        }
+        clipboardManager.deleteItem(item)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        showToastMessage("Öğe silindi")
     }
     
     private func togglePin(_ item: ClipboardItem) {
-        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
-            clipboardManager.clipboardItems[index].isPinned.toggle()
-            clipboardManager.saveItems()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showToastMessage(clipboardManager.clipboardItems[index].isPinned ? "Sabitlendi" : "Sabitleme kaldırıldı")
-        }
+        clipboardManager.togglePinItem(item)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        showToastMessage(item.isPinned ? "Sabitlendi" : "Sabitleme kaldırıldı")
     }
 }
 

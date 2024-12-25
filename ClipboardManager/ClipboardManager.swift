@@ -30,6 +30,8 @@ public class ClipboardManager: ObservableObject {
     
     private var lastCopiedText: String?
     
+    static let clipboardChangedNotification = Notification.Name("ClipboardManagerDataChanged")
+    
     private init() {
         loadItems()
         startMonitoring()
@@ -97,6 +99,7 @@ public class ClipboardManager: ObservableObject {
     public func saveItems() {
         if let data = try? JSONEncoder().encode(clipboardItems) {
             userDefaults?.set(data, forKey: "clipboardItems")
+            notifyClipboardChanged()
         }
     }
     
@@ -109,6 +112,34 @@ public class ClipboardManager: ObservableObject {
     
     public func shareItem(_ item: ClipboardItem) {
         // Paylaşım işlemi view tarafında yapılacak
+    }
+    
+    public func deleteItem(_ item: ClipboardItem) {
+        if let index = clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardItems.remove(at: index)
+            saveItems()
+            notifyClipboardChanged()
+        }
+    }
+    
+    public func togglePinItem(_ item: ClipboardItem) {
+        if let index = clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardItems[index].isPinned.toggle()
+            saveItems()
+            notifyClipboardChanged()
+        }
+    }
+    
+    public func clearAllItems() {
+        clipboardItems.removeAll()
+        userDefaults?.removeObject(forKey: "clipboardItems")
+        notifyClipboardChanged()
+    }
+    
+    private func notifyClipboardChanged() {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: ClipboardManager.clipboardChangedNotification, object: nil)
+        }
     }
     
     deinit {
