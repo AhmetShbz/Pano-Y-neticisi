@@ -61,9 +61,12 @@ public class ClipboardManager: ObservableObject {
     @objc private func checkClipboard() {
         if let text = UIPasteboard.general.string,
            !text.isEmpty && text != lastCopiedText {
-            lastCopiedText = text
-            DispatchQueue.main.async {
-                self.addItem(text)
+            // Sadece kullanıcının kopyaladığı metinleri kaydet
+            if UIPasteboard.general.hasStrings {
+                lastCopiedText = text
+                DispatchQueue.main.async {
+                    self.addItem(text)
+                }
             }
         }
     }

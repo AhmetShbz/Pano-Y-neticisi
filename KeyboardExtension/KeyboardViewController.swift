@@ -79,9 +79,11 @@ class KeyboardViewController: UIInputViewController {
             lastPasteboardChangeCount = currentChangeCount
             
             if let text = UIPasteboard.general.string, !text.isEmpty {
-                DispatchQueue.main.async { [weak self] in
-                    self?.clipboardManager.addItem(text)
-                    self?.updateKeyboardView()
+                if UIPasteboard.general.hasStrings {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.clipboardManager.addItem(text)
+                        self?.updateKeyboardView()
+                    }
                 }
             }
         }
