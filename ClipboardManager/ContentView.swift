@@ -190,6 +190,14 @@ struct ContentView: View {
                                     Label("Klavye Ayarları", systemImage: "keyboard")
                                 }
 
+                                Button(action: {
+                                    if let url = URL(string: UIApplication.openSettingsURLString + "/ClipboardManager") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }) {
+                                    Label("Arka Plan Yenileme", systemImage: "arrow.clockwise")
+                                }
+
                                 Divider()
 
                                 Button(action: {

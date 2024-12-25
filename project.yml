@@ -24,6 +24,8 @@ targets:
         UILaunchStoryboardName: ""
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UIBackgroundModes:
+          - fetch
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmtcanx.clipboardmanager

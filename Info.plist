@@ -20,17 +20,12 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>UIApplicationExitsOnSuspend</key>
-	<false/>
+	<key>UILaunchStoryboardName</key>
+	<string></string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
-		<string>processing</string>
 	</array>
-	<key>UILaunchStoryboardName</key>
-	<string></string>
-	<key>UIRequiresPersistentWiFi</key>
-	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
