@@ -19,14 +19,14 @@ Copypast, iOS cihazlar için geliştirilmiş modern ve kullanıcı dostu bir pan
 
 ## 📱 Ekran Görüntüleri
 
-### Aydınlık Mod
+### Karanlık Mod
 <p align="center">
   <img src="foto/IMG_2227.PNG" width="200" alt="Light Mode 1">
   <img src="foto/IMG_2228.PNG" width="200" alt="Light Mode 2">
   <img src="foto/IMG_2229.PNG" width="200" alt="Light Mode 3">
 </p>
 
-### Karanlık Mod
+### Aydınlık Mod
 <p align="center">
   <img src="foto/IMG_2243.PNG" width="200" alt="Dark Mode 1">
   <img src="foto/IMG_2244.PNG" width="200" alt="Dark Mode 2">
