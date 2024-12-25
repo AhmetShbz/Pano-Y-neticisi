@@ -238,7 +238,7 @@ struct ContentView: View {
                         }
                         .padding(.vertical, 4)
                         
-                        Link(destination: URL(string: "https://github.com/ahmetknkc")!) {
+                        Link(destination: URL(string: "https://github.com/AhmetShbz")!) {
                             HStack {
                                 Image(systemName: "link")
                                 Text("GitHub")
