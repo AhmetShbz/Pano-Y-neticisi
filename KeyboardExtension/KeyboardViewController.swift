@@ -67,6 +67,14 @@ class KeyboardViewController: UIInputViewController {
             object: nil
         )
         
+        // Klavye görünür olduğunda yenile
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleClipboardManagerChanges),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkPasteboardChanges()
         }
@@ -89,8 +97,20 @@ class KeyboardViewController: UIInputViewController {
         }
     }
     
-    @objc private func handleClipboardManagerChanges() {
+    @objc private func handleClipboardManagerChanges(_ notification: Notification? = nil) {
         DispatchQueue.main.async { [weak self] in
+            // Özel silme işlemi kontrolü
+            if let userInfo = notification?.userInfo,
+               let action = userInfo["action"] as? String,
+               action == "delete",
+               let itemIdString = userInfo["itemId"] as? String,
+               let itemId = UUID(uuidString: itemIdString) {
+                // Silinen öğeyi klavye eklentisinden de kaldır
+                if let index = self?.clipboardManager.clipboardItems.firstIndex(where: { $0.id == itemId }) {
+                    self?.clipboardManager.clipboardItems.remove(at: index)
+                }
+            }
+            
             self?.clipboardManager.loadItems()
             self?.updateKeyboardView()
         }

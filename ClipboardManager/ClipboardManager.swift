@@ -118,6 +118,7 @@ public class ClipboardManager: ObservableObject {
     public func saveItems() {
         if let data = try? JSONEncoder().encode(clipboardItems) {
             userDefaults?.set(data, forKey: "clipboardItems")
+            userDefaults?.synchronize()
             notifyClipboardChanged()
         }
     }
@@ -137,7 +138,11 @@ public class ClipboardManager: ObservableObject {
         if let index = clipboardItems.firstIndex(where: { $0.id == item.id }) {
             clipboardItems.remove(at: index)
             saveItems()
-            notifyClipboardChanged()
+            
+            // Ana uygulamaya ve klavye eklentisine özel bildirim gönder
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: ClipboardManager.clipboardChangedNotification, object: nil, userInfo: ["action": "delete", "itemId": item.id.uuidString])
+            }
         }
     }
     
@@ -158,6 +163,12 @@ public class ClipboardManager: ObservableObject {
     private func notifyClipboardChanged() {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: ClipboardManager.clipboardChangedNotification, object: nil)
+            
+            // Değişiklikleri hemen yükle
+            self.loadItems()
+            
+            // Diğer hedeflere de bildir
+            NotificationCenter.default.post(name: .clipboardItemAdded, object: nil)
         }
     }
     
