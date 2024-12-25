@@ -142,6 +142,9 @@ struct ContentView: View {
                                     .listStyle(.plain)
                                     .scrollContentBackground(.hidden)
                                     .background(Color.clear)
+                                    .refreshable {
+                                        clipboardManager.loadItems()
+                                    }
                                 }
                             }
                             
