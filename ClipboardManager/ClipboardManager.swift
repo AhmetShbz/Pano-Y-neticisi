@@ -29,6 +29,8 @@ public class ClipboardManager: ObservableObject {
     public let userDefaults = UserDefaults(suiteName: "group.com.ahmtcanx.clipboardmanager")
     
     private var lastCopiedText: String?
+    private var lastPasteboardChangeCount: Int = UIPasteboard.general.changeCount
+    private var updateTimer: Timer?
     
     static let clipboardChangedNotification = Notification.Name("ClipboardManagerDataChanged")
     
@@ -54,8 +56,22 @@ public class ClipboardManager: ObservableObject {
             object: nil
         )
         
+        // Periyodik kontrol başlat
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.checkPasteboardChanges()
+        }
+        
         // İlk açılışta mevcut panoyu kontrol et
         checkClipboard()
+    }
+    
+    @objc private func checkPasteboardChanges() {
+        let currentChangeCount = UIPasteboard.general.changeCount
+        
+        if currentChangeCount != lastPasteboardChangeCount {
+            lastPasteboardChangeCount = currentChangeCount
+            checkClipboard()
+        }
     }
     
     @objc private func checkClipboard() {
@@ -146,6 +162,7 @@ public class ClipboardManager: ObservableObject {
     }
     
     deinit {
+        updateTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
     }
 } 
