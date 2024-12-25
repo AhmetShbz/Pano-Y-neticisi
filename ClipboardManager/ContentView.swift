@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showToast = false
     @State private var toastMessage = ""
     @State private var showSettings = false
+    @State private var showAboutSheet = false
     @State private var animateBackground = false
     @State private var searchText = ""
     @Environment(\.colorScheme) private var colorScheme
@@ -185,11 +186,95 @@ struct ContentView: View {
                                 }) {
                                     Label("Klavye Ayarları", systemImage: "keyboard")
                                 }
+
+                                Divider()
+
+                                Button(action: {
+                                    showAboutSheet = true
+                                }) {
+                                    Label("Hakkında", systemImage: "info.circle")
+                                }
                             } label: {
                                 Image(systemName: "ellipsis.circle")
                                     .font(.system(size: 16, weight: .medium))
                             }
                             .buttonStyle(ToolbarButtonStyle())
+                        }
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAboutSheet) {
+            NavigationView {
+                List {
+                    Section {
+                        VStack(spacing: 16) {
+                            Image("AppLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .cornerRadius(20)
+                                .shadow(color: .blue.opacity(0.3), radius: 10)
+                            
+                            Text("Pano Yöneticisi")
+                                .font(.title2.bold())
+                            
+                            Text("Sürüm 1.0")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical)
+                        .listRowBackground(Color.clear)
+                    }
+                    
+                    Section {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Geliştirici")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("Ahmet")
+                                .font(.body)
+                        }
+                        .padding(.vertical, 4)
+                        
+                        Link(destination: URL(string: "https://github.com/ahmetknkc")!) {
+                            HStack {
+                                Image(systemName: "link")
+                                Text("GitHub")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.footnote)
+                            }
+                        }
+                        
+                        Link(destination: URL(string: "https://www.buymeacoffee.com/ahmetknkc")!) {
+                            HStack {
+                                Image(systemName: "cup.and.saucer")
+                                Text("Bana Kahve Ismarla")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.footnote)
+                            }
+                        }
+                    } header: {
+                        Text("İletişim")
+                    }
+                    
+                    Section {
+                        Text("Bu uygulama, kopyaladığınız metinleri güvenli bir şekilde saklar ve istediğiniz zaman erişmenizi sağlar. Tüm verileriniz yalnızca sizin cihazınızda tutulur ve üçüncü taraflarla paylaşılmaz.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    } header: {
+                        Text("Hakkında")
+                    }
+                }
+                .navigationTitle("Hakkında")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Tamam") {
+                            showAboutSheet = false
                         }
                     }
                 }
