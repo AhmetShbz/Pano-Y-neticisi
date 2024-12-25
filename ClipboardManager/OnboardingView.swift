@@ -23,7 +23,7 @@ struct OnboardingView: View {
     var pages: [OnboardingPage] {
         [
             OnboardingPage(
-                image: "keyboard.fill",
+                image: "AppLogo",
                 title: "Hoş Geldiniz! 👋",
                 description: "Pano Yöneticisi ile kopyaladığınız her şeye anında erişin ve üretkenliğinizi artırın. Hızlı, güvenli ve kullanımı kolay!",
                 buttonTitle: nil,
@@ -179,22 +179,34 @@ struct PageView: View {
             Spacer()
             
             // İkon
-            Image(systemName: page.image)
-                .font(.system(size: 80))
-                .foregroundColor(.blue)
-                .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
-                .scaleEffect(isAnimating ? 1.1 : 0.9)
-                .rotationEffect(.degrees(isAnimating ? 8 : -8))
-                .animation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
-                .onAppear { 
-                    isAnimating = true
-                    withAnimation(.easeIn(duration: 0.5)) {
-                        showContent = true
-                    }
+            Group {
+                if page.image == "AppLogo" {
+                    Image("AppLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
+                        .scaleEffect(isAnimating ? 1.1 : 0.9)
+                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
+                } else {
+                    Image(systemName: page.image)
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                        .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
+                        .scaleEffect(isAnimating ? 1.1 : 0.9)
+                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
                 }
-                .onDisappear {
-                    showContent = false
+            }
+            .animation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+            .onAppear { 
+                isAnimating = true
+                withAnimation(.easeIn(duration: 0.5)) {
+                    showContent = true
                 }
+            }
+            .onDisappear {
+                showContent = false
+            }
             
             VStack(spacing: 16) {
                 // Başlık
