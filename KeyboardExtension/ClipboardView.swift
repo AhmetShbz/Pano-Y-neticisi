@@ -55,9 +55,10 @@ struct ClipboardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 8) {
                         ForEach(clipboardManager.clipboardItems) { item in
-                            KeyboardClipboardItemView(item: item) {
+                            ClipboardItemView(item: item) {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                 onItemSelected(item.text)
                             }
                         }
@@ -70,73 +71,74 @@ struct ClipboardView: View {
     }
 }
 
-struct KeyboardClipboardItemView: View {
+// Clipboard öğesi görünümü
+struct ClipboardItemView: View {
     let item: ClipboardItem
     let onTap: () -> Void
     @Environment(\.colorScheme) private var colorScheme
-    @State private var isPressed = false
     
     var body: some View {
-        Button(action: {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            onTap()
-        }) {
+        Button(action: onTap) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(item.text)
-                    .font(.system(size: 15))
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                
                 HStack(spacing: 6) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    Image(systemName: getSystemImage(for: item.text))
+                        .font(.system(size: 14))
+                        .foregroundColor(.blue)
                     
-                    Text(timeAgoDisplay(date: item.date))
-                        .font(.system(size: 11))
+                    Text(getItemType(for: item.text))
+                        .font(.system(size: 12))
                         .foregroundColor(.secondary)
                     
                     Spacer()
                     
-                    Image(systemName: "arrow.up.doc.on.clipboard")
+                    Text(timeAgoDisplay(date: item.date))
                         .font(.system(size: 12))
-                        .foregroundColor(.blue)
-                        .opacity(isPressed ? 0.7 : 1.0)
+                        .foregroundColor(.secondary)
                 }
+                
+                Text(item.text)
+                    .lineLimit(2)
+                    .font(.system(size: 15))
+                    .foregroundColor(.primary)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(colorScheme == .dark ? .systemGray6 : .white))
-                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 3)
-            )
+            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.7))
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
         }
-        .buttonStyle(KeyboardItemButtonStyle())
     }
     
-    private func timeAgoDisplay(date: Date) -> String {
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.minute, .hour, .day], from: date, to: now)
-        
-        if let day = components.day, day > 0 {
-            return day == 1 ? "Dün" : "\(day) gün"
-        } else if let hour = components.hour, hour > 0 {
-            return "\(hour) sa"
-        } else if let minute = components.minute, minute > 0 {
-            return "\(minute) dk"
-        } else {
-            return "Şimdi"
-        }
+    // Metin türüne göre ikon seç
+    private func getSystemImage(for text: String) -> String {
+        if text.contains("@") { return "envelope.fill" }
+        if text.contains("http") || text.contains("www") { return "link" }
+        if text.filter({ $0.isNumber }).count > 8 { return "phone.fill" }
+        return "doc.text.fill"
+    }
+    
+    // Metin türünü belirle
+    private func getItemType(for text: String) -> String {
+        if text.contains("@") { return "E-posta" }
+        if text.contains("http") || text.contains("www") { return "Link" }
+        if text.filter({ $0.isNumber }).count > 8 { return "Telefon" }
+        return "\(text.count) karakter"
     }
 }
 
-struct KeyboardItemButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
+// Zaman gösterimi fonksiyonu
+func timeAgoDisplay(date: Date) -> String {
+    let calendar = Calendar.current
+    let now = Date()
+    let components = calendar.dateComponents([.minute, .hour, .day], from: date, to: now)
+    
+    if let day = components.day, day > 0 {
+        return "\(day)g önce"
+    } else if let hour = components.hour, hour > 0 {
+        return "\(hour)s önce"
+    } else if let minute = components.minute, minute > 0 {
+        return "\(minute)d önce"
+    } else {
+        return "Şimdi"
     }
 } 
