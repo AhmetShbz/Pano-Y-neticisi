@@ -6,6 +6,12 @@ struct ClipboardView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateBackground = false
     
+    var sortedItems: [ClipboardItem] {
+        let pinnedItems = clipboardManager.clipboardItems.filter { $0.isPinned }
+        let unpinnedItems = clipboardManager.clipboardItems.filter { !$0.isPinned }
+        return pinnedItems + unpinnedItems
+    }
+    
     var body: some View {
         ZStack {
             // Animasyonlu arka plan
@@ -38,8 +44,8 @@ struct ClipboardView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "doc.on.clipboard")
                         .font(.system(size: 50))
-                        .foregroundColor(.blue.opacity(0.8))
-                        .shadow(color: .blue.opacity(0.2), radius: 8, x: 0, y: 4)
+                        .foregroundColor(.blue.opacity(0.6))
+                        .shadow(color: .blue.opacity(0.1), radius: 10, x: 0, y: 5)
                     
                     Text("Henüz Kopyalanan Metin Yok")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
@@ -54,22 +60,55 @@ struct ClipboardView: View {
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView(.vertical, showsIndicators: true) {
-                    LazyVStack(spacing: 12) {
-                        ForEach(clipboardManager.clipboardItems) { item in
-                            ClipboardItemView(item: item) {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                onItemSelected(item.text)
+                List {
+                    ForEach(sortedItems) { item in
+                        ClipboardItemView(item: item) {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            onItemSelected(item.text)
+                        }
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                withAnimation {
+                                    deleteItem(item)
+                                }
+                            } label: {
+                                Label("Sil", systemImage: "trash")
                             }
                         }
-                        Color.clear.frame(height: 80)
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            Button {
+                                withAnimation {
+                                    togglePin(item)
+                                }
+                            } label: {
+                                Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
+                                      systemImage: item.isPinned ? "pin.slash" : "pin")
+                            }
+                            .tint(.blue)
+                        }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
                 }
-                .scrollDismissesKeyboard(.never)
-                .scrollIndicators(.visible)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
             }
+        }
+    }
+    
+    private func deleteItem(_ item: ClipboardItem) {
+        clipboardManager.clipboardItems.removeAll(where: { $0.id == item.id })
+        clipboardManager.saveItems()
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+    
+    private func togglePin(_ item: ClipboardItem) {
+        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardManager.clipboardItems[index].isPinned.toggle()
+            clipboardManager.saveItems()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
     }
 }
@@ -114,6 +153,7 @@ struct ClipboardItemView: View {
             .cornerRadius(14)
             .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
+        .buttonStyle(PlainButtonStyle())
     }
     
     // Metin türüne göre ikon seç
