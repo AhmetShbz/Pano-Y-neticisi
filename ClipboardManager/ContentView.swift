@@ -107,21 +107,40 @@ struct ContentView: View {
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 } else {
                                     // Kopyalanan metinler listesi
-                                    ScrollView(.vertical, showsIndicators: true) {
-                                        LazyVStack(spacing: 12) {
-                                            ForEach(filteredItems) { item in
-                                                ClipboardItemView(
-                                                    item: item,
-                                                    showToastMessage: showToastMessage
-                                                )
+                                    List {
+                                        ForEach(filteredItems) { item in
+                                            ClipboardItemView(
+                                                item: item,
+                                                showToastMessage: showToastMessage
+                                            )
+                                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                            .listRowBackground(Color.clear)
+                                            .listRowSeparator(.hidden)
+                                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                                Button(role: .destructive) {
+                                                    withAnimation {
+                                                        deleteItem(item)
+                                                    }
+                                                } label: {
+                                                    Label("Sil", systemImage: "trash")
+                                                }
                                             }
-                                            Color.clear.frame(height: 80)
+                                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                                Button {
+                                                    withAnimation {
+                                                        togglePin(item)
+                                                    }
+                                                } label: {
+                                                    Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
+                                                          systemImage: item.isPinned ? "pin.slash" : "pin")
+                                                }
+                                                .tint(.blue)
+                                            }
                                         }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 12)
                                     }
-                                    .scrollDismissesKeyboard(.never)
-                                    .scrollIndicators(.visible)
+                                    .listStyle(.plain)
+                                    .scrollContentBackground(.hidden)
+                                    .background(Color.clear)
                                 }
                             }
                             
@@ -308,6 +327,7 @@ struct ClipboardItemView: View {
             .cornerRadius(14)
             .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
         }
+        .buttonStyle(PlainButtonStyle())
         .contextMenu {
             Button(action: {
                 withAnimation {
