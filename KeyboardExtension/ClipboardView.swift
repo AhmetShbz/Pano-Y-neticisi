@@ -90,6 +90,12 @@ struct ClipboardView: View {
                             .tint(.blue)
                         }
                     }
+                    
+                    // Alt boşluk için görünmez öğe
+                    Color.clear
+                        .frame(height: 80)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
