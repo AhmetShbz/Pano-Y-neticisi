@@ -8,11 +8,11 @@ class KeyboardViewController: UIInputViewController {
     private var isClipboardViewVisible = false
     private var updateTimer: Timer?
     private var lastPasteboardChangeCount: Int = 0
+    private let keyboardHeight: CGFloat = 300 // Sabit klavye yüksekliği
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupKeyboardView()
-        setupGestureRecognizer()
         setupClipboardObservers()
         
         // İlk açılışta pano durumunu kaydet
@@ -55,7 +55,6 @@ class KeyboardViewController: UIInputViewController {
         if let clipboardView = clipboardView {
             clipboardView.rootView = ClipboardView(clipboardManager: clipboardManager) { [weak self] text in
                 self?.insertText(text)
-                self?.hideClipboardView()
             }
         }
     }
@@ -69,7 +68,7 @@ class KeyboardViewController: UIInputViewController {
         // Klavye arka plan görünümü
         view.backgroundColor = .systemBackground
         
-        // Kaydırma görünümü için container
+        // Container view
         let containerView = UIView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(containerView)
@@ -78,16 +77,13 @@ class KeyboardViewController: UIInputViewController {
         NSLayoutConstraint.activate([
             containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            containerView.topAnchor.constraint(equalTo: view.topAnchor),
+            containerView.heightAnchor.constraint(equalToConstant: keyboardHeight)
         ])
         
-        heightConstraint = containerView.heightAnchor.constraint(equalToConstant: 0)
-        heightConstraint?.isActive = true
-        
         // SwiftUI view'ı oluştur
-        let clipboardView = UIHostingController(rootView: ClipboardView(clipboardManager: clipboardManager) { text in
-            self.insertText(text)
-            self.hideClipboardView()
+        let clipboardView = UIHostingController(rootView: ClipboardView(clipboardManager: clipboardManager) { [weak self] text in
+            self?.insertText(text)
         })
         self.clipboardView = clipboardView
         
@@ -104,49 +100,6 @@ class KeyboardViewController: UIInputViewController {
         ])
         
         clipboardView.didMove(toParent: self)
-    }
-    
-    private func setupGestureRecognizer() {
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
-        view.addGestureRecognizer(panGesture)
-    }
-    
-    @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: view)
-        let velocity = gesture.velocity(in: view)
-        
-        switch gesture.state {
-        case .changed:
-            let newHeight = max(0, min(200, -translation.y))
-            heightConstraint?.constant = newHeight
-            
-        case .ended:
-            let shouldShow = velocity.y < 0 || heightConstraint?.constant ?? 0 > 100
-            if shouldShow {
-                showClipboardView()
-            } else {
-                hideClipboardView()
-            }
-            
-        default:
-            break
-        }
-    }
-    
-    private func showClipboardView() {
-        isClipboardViewVisible = true
-        UIView.animate(withDuration: 0.3) {
-            self.heightConstraint?.constant = 200
-            self.view.layoutIfNeeded()
-        }
-    }
-    
-    private func hideClipboardView() {
-        isClipboardViewVisible = false
-        UIView.animate(withDuration: 0.3) {
-            self.heightConstraint?.constant = 0
-            self.view.layoutIfNeeded()
-        }
     }
     
     private func insertText(_ text: String) {
