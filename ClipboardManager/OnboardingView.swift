@@ -39,6 +39,14 @@ struct OnboardingView: View {
                 secondaryDescription: "🔒 Tam Erişim izni yalnızca pano içeriğine erişmek için kullanılır ve verileriniz her zaman güvende kalır."
             ),
             OnboardingPage(
+                image: "arrow.clockwise",
+                title: "Arka Plan Yenileme",
+                description: "Uygulamanın arka planda çalışarak yeni kopyalanan metinleri otomatik olarak kaydetmesi için Arka Plan Yenileme özelliğini açmanız gerekiyor.",
+                buttonTitle: "Arka Plan Ayarlarını Aç",
+                buttonAction: openBackgroundSettings,
+                secondaryDescription: "⚡️ Bu özellik sayesinde uygulama kapalıyken bile kopyaladığınız metinler kaydedilir."
+            ),
+            OnboardingPage(
                 image: "checkmark.seal.fill",
                 title: "Her Şey Hazır! ",
                 description: "Tebrikler! Artık kopyaladığınız her şey otomatik olarak kaydedilecek ve her yerde erişilebilir olacak. Üretkenliğinizi artırmaya hazırsınız!",
@@ -159,8 +167,8 @@ struct OnboardingView: View {
         }
     }
     
-    private func openFullAccessSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
+    private func openBackgroundSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString + "/ClipboardManager") {
             UIApplication.shared.open(url)
         }
     }
