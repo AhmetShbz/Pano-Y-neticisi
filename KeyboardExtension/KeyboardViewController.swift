@@ -21,6 +21,9 @@ class KeyboardViewController: UIInputViewController {
                 clipboardManager: ClipboardManager.shared,
                 onItemSelected: { [weak self] text in
                     self?.textDocumentProxy.insertText(text)
+                },
+                onDismiss: { [weak self] in
+                    self?.advanceToNextInputMode()
                 }
             )
         )
@@ -122,9 +125,16 @@ class KeyboardViewController: UIInputViewController {
                 clipboardManager: clipboardManager,
                 onItemSelected: { [weak self] text in
                     self?.textDocumentProxy.insertText(text)
+                },
+                onDismiss: { [weak self] in
+                    self?.advanceToNextInputMode()
                 }
             )
         }
+    }
+    
+    override func dismissKeyboard() {
+        advanceToNextInputMode()
     }
     
     deinit {

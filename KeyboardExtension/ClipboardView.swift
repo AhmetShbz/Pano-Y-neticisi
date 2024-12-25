@@ -3,6 +3,7 @@ import SwiftUI
 struct ClipboardView: View {
     @ObservedObject var clipboardManager: ClipboardManager
     var onItemSelected: (String) -> Void
+    var onDismiss: () -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateBackground = false
     
@@ -39,67 +40,90 @@ struct ClipboardView: View {
             }
             .ignoresSafeArea()
             
-            if clipboardManager.clipboardItems.isEmpty {
-                // Boş durum görünümü
-                VStack(spacing: 16) {
-                    Image(systemName: "doc.on.clipboard")
-                        .font(.system(size: 50))
-                        .foregroundColor(.blue.opacity(0.6))
-                        .shadow(color: .blue.opacity(0.1), radius: 10, x: 0, y: 5)
-                    
-                    Text("Henüz Kopyalanan Metin Yok")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    
-                    Text("Kopyaladığınız metinler burada görünecek")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List {
-                    ForEach(sortedItems) { item in
-                        ClipboardItemView(item: item) {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            onItemSelected(item.text)
+            VStack(spacing: 0) {
+                // Geri dönüş tuşu
+                HStack {
+                    Button(action: onDismiss) {
+                        HStack {
+                            Image(systemName: "keyboard.chevron.compact.down")
+                                .font(.system(size: 18, weight: .medium))
+                            Text("Klavye")
+                                .font(.system(size: 15, weight: .medium))
                         }
-                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                withAnimation {
-                                    deleteItem(item)
-                                }
-                            } label: {
-                                Label("Sil", systemImage: "trash")
-                            }
-                        }
-                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                            Button {
-                                withAnimation {
-                                    togglePin(item)
-                                }
-                            } label: {
-                                Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
-                                      systemImage: item.isPinned ? "pin.slash" : "pin")
-                            }
-                            .tint(.blue)
-                        }
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
                     }
+                    .padding(.leading, 16)
+                    .padding(.top, 8)
                     
-                    // Alt boşluk için görünmez öğe
-                    Color.clear
-                        .frame(height: 80)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets())
+                    Spacer()
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .background(Color.clear)
+                
+                if clipboardManager.clipboardItems.isEmpty {
+                    // Boş durum görünümü
+                    VStack(spacing: 16) {
+                        Image(systemName: "doc.on.clipboard")
+                            .font(.system(size: 50))
+                            .foregroundColor(.blue.opacity(0.6))
+                            .shadow(color: .blue.opacity(0.1), radius: 10, x: 0, y: 5)
+                        
+                        Text("Henüz Kopyalanan Metin Yok")
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                        
+                        Text("Kopyaladığınız metinler burada görünecek")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        ForEach(sortedItems) { item in
+                            ClipboardItemView(item: item) {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                onItemSelected(item.text)
+                            }
+                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        deleteItem(item)
+                                    }
+                                } label: {
+                                    Label("Sil", systemImage: "trash")
+                                }
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                Button {
+                                    withAnimation {
+                                        togglePin(item)
+                                    }
+                                } label: {
+                                    Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
+                                          systemImage: item.isPinned ? "pin.slash" : "pin")
+                                }
+                                .tint(.blue)
+                            }
+                        }
+                        
+                        // Alt boşluk için görünmez öğe
+                        Color.clear
+                            .frame(height: 80)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets())
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                }
             }
         }
         .onAppear {
