@@ -107,42 +107,21 @@ struct ContentView: View {
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 } else {
                                     // Kopyalanan metinler listesi
-                                    List {
-                                        ForEach(filteredItems) { item in
-                                            ClipboardItemView(
-                                                item: item,
-                                                showToastMessage: showToastMessage
-                                            )
-                                            .listRowSeparator(.hidden)
-                                            .listRowBackground(Color.clear)
-                                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                                Button(role: .destructive) {
-                                                    withAnimation {
-                                                        deleteItem(item)
-                                                    }
-                                                } label: {
-                                                    Label("Sil", systemImage: "trash")
-                                                }
-                                                .tint(.red)
+                                    ScrollView(.vertical, showsIndicators: true) {
+                                        LazyVStack(spacing: 12) {
+                                            ForEach(filteredItems) { item in
+                                                ClipboardItemView(
+                                                    item: item,
+                                                    showToastMessage: showToastMessage
+                                                )
                                             }
-                                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                                Button {
-                                                    withAnimation {
-                                                        togglePin(item)
-                                                    }
-                                                } label: {
-                                                    Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
-                                                          systemImage: item.isPinned ? "pin.slash" : "pin")
-                                                }
-                                                .tint(item.isPinned ? .gray : .blue)
-                                            }
+                                            Color.clear.frame(height: 80)
                                         }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 12)
                                     }
-                                    .listStyle(PlainListStyle())
-                                    .refreshable {
-                                        // Yenileme animasyonu için boş işlem
-                                    }
+                                    .scrollDismissesKeyboard(.never)
+                                    .scrollIndicators(.visible)
                                 }
                             }
                             
@@ -301,49 +280,44 @@ struct ClipboardItemView: View {
             UIPasteboard.general.string = item.text
             showToastMessage("Kopyalandı")
         }) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 8) {
-                    Text(item.text)
-                        .font(.system(size: 16))
-                        .foregroundColor(.primary)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                    
-                    if item.isPinned {
-                        Image(systemName: "pin.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(.blue)
-                            .rotationEffect(.degrees(45))
-                    }
-                }
-                
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    Image(systemName: "clock")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Image(systemName: getSystemImage(for: item.text))
+                        .font(.system(size: 16))
+                        .foregroundColor(.blue)
                     
-                    Text(item.date.timeAgoDisplay())
-                        .font(.caption)
+                    Text(getItemType(for: item.text))
+                        .font(.system(size: 13))
                         .foregroundColor(.secondary)
                     
                     Spacer()
                     
-                    Image(systemName: "doc.on.doc")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                        .opacity(isPressed ? 0.7 : 1.0)
+                    Text(timeAgoDisplay(date: item.date))
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
                 }
+                
+                Text(item.text)
+                    .lineLimit(2)
+                    .font(.system(size: 16))
+                    .foregroundColor(.primary)
             }
-            .padding()
+            .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(colorScheme == .dark ? .systemGray6 : .white))
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
-            )
+            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.7))
+            .cornerRadius(14)
+            .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
         }
-        .buttonStyle(ClipboardItemButtonStyle())
         .contextMenu {
+            Button(action: {
+                withAnimation {
+                    togglePin(item)
+                }
+            }) {
+                Label(item.isPinned ? "Sabitlemeyi Kaldır" : "Sabitle", 
+                      systemImage: item.isPinned ? "pin.slash" : "pin")
+            }
+            
             Button(action: {
                 editedText = item.text
                 showEditSheet = true
@@ -352,14 +326,24 @@ struct ClipboardItemView: View {
             }
             
             Button(action: {
+                withAnimation {
+                    deleteItem(item)
+                }
+            }) {
+                Label("Sil", systemImage: "trash")
+            }
+            .tint(.red)
+            
+            Button(action: {
+                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                      let window = windowScene.windows.first else { return }
+                
                 let activityVC = UIActivityViewController(
                     activityItems: [item.text],
                     applicationActivities: nil
                 )
                 
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = windowScene.windows.first,
-                   let rootVC = window.rootViewController {
+                if let rootVC = window.rootViewController {
                     activityVC.popoverPresentationController?.sourceView = rootVC.view
                     rootVC.present(activityVC, animated: true)
                 }
@@ -386,13 +370,61 @@ struct ClipboardItemView: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Kaydet") {
-                            clipboardManager.updateItem(item, newText: editedText)
+                            if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
+                                clipboardManager.clipboardItems[index].text = editedText
+                                clipboardManager.saveItems()
+                            }
                             showEditSheet = false
                         }
                     }
                 }
             }
         }
+    }
+    
+    // Metin türüne göre ikon seç
+    private func getSystemImage(for text: String) -> String {
+        if text.contains("@") { return "envelope.fill" }
+        if text.contains("http") || text.contains("www") { return "link" }
+        if text.filter({ $0.isNumber }).count > 8 { return "phone.fill" }
+        return "doc.text.fill"
+    }
+    
+    // Metin türünü belirle
+    private func getItemType(for text: String) -> String {
+        if text.contains("@") { return "E-posta" }
+        if text.contains("http") || text.contains("www") { return "Link" }
+        if text.filter({ $0.isNumber }).count > 8 { return "Telefon" }
+        return "\(text.count) karakter"
+    }
+    
+    private func togglePin(_ item: ClipboardItem) {
+        if let index = clipboardManager.clipboardItems.firstIndex(where: { $0.id == item.id }) {
+            clipboardManager.clipboardItems[index].isPinned.toggle()
+            clipboardManager.saveItems()
+        }
+    }
+    
+    private func deleteItem(_ item: ClipboardItem) {
+        clipboardManager.clipboardItems.removeAll(where: { $0.id == item.id })
+        clipboardManager.saveItems()
+    }
+}
+
+// Zaman gösterimi fonksiyonu
+func timeAgoDisplay(date: Date) -> String {
+    let calendar = Calendar.current
+    let now = Date()
+    let components = calendar.dateComponents([.minute, .hour, .day], from: date, to: now)
+    
+    if let day = components.day, day > 0 {
+        return "\(day)g önce"
+    } else if let hour = components.hour, hour > 0 {
+        return "\(hour)s önce"
+    } else if let minute = components.minute, minute > 0 {
+        return "\(minute)d önce"
+    } else {
+        return "Şimdi"
     }
 }
 
@@ -412,24 +444,6 @@ struct ToolbarButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.7 : 1.0)
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
-    }
-}
-
-extension Date {
-    func timeAgoDisplay() -> String {
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.minute, .hour, .day], from: self, to: now)
-        
-        if let day = components.day, day > 0 {
-            return day == 1 ? "Dün" : "\(day) gün önce"
-        } else if let hour = components.hour, hour > 0 {
-            return "\(hour) saat önce"
-        } else if let minute = components.minute, minute > 0 {
-            return "\(minute) dakika önce"
-        } else {
-            return "Az önce"
-        }
     }
 }
 
