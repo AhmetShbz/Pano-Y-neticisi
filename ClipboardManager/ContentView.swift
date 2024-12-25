@@ -35,18 +35,18 @@ struct ContentView: View {
                         GeometryReader { geometry in
                             ZStack {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.15))
+                                    .fill(Color.blue.opacity(0.08))
                                     .frame(width: geometry.size.width * 0.6)
                                     .offset(x: animateBackground ? geometry.size.width * 0.3 : -geometry.size.width * 0.3,
                                             y: animateBackground ? geometry.size.height * 0.2 : -geometry.size.height * 0.2)
-                                    .blur(radius: 50)
+                                    .blur(radius: 60)
                                 
                                 Circle()
-                                    .fill(Color.purple.opacity(0.15))
+                                    .fill(Color.purple.opacity(0.08))
                                     .frame(width: geometry.size.width * 0.8)
                                     .offset(x: animateBackground ? -geometry.size.width * 0.2 : geometry.size.width * 0.2,
                                             y: animateBackground ? -geometry.size.height * 0.3 : geometry.size.height * 0.3)
-                                    .blur(radius: 50)
+                                    .blur(radius: 60)
                             }
                             .onAppear {
                                 withAnimation(Animation.easeInOut(duration: 8.0).repeatForever(autoreverses: true)) {
@@ -69,9 +69,9 @@ struct ContentView: View {
                                 VStack(spacing: 24) {
                                     Image(systemName: "doc.on.clipboard")
                                         .font(.system(size: 70))
-                                        .foregroundColor(.blue.opacity(0.8))
+                                        .foregroundColor(.blue.opacity(0.6))
                                         .padding(.bottom, 10)
-                                        .shadow(color: .blue.opacity(0.2), radius: 10, x: 0, y: 5)
+                                        .shadow(color: .blue.opacity(0.1), radius: 10, x: 0, y: 5)
                                     
                                     Text("Henüz Kopyalanan Metin Yok")
                                         .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -214,7 +214,7 @@ struct ContentView: View {
                                 .scaledToFit()
                                 .frame(width: 100, height: 100)
                                 .cornerRadius(20)
-                                .shadow(color: .blue.opacity(0.3), radius: 10)
+                                .shadow(color: .blue.opacity(0.2), radius: 10)
                             
                             Text("Pano Yöneticisi")
                                 .font(.title2.bold())
@@ -345,7 +345,9 @@ struct SearchBar: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(colorScheme == .dark ? .systemGray6 : .systemGray6))
+                .fill(colorScheme == .dark ? Color.black.opacity(0.15) : Color.white.opacity(0.5))
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
         )
     }
 }
@@ -388,7 +390,7 @@ struct ClipboardItemView: View {
                 HStack(spacing: 8) {
                     Image(systemName: getSystemImage(for: item.text))
                         .font(.system(size: 16))
-                        .foregroundColor(.blue)
+                        .foregroundColor(.blue.opacity(0.8))
                     
                     Text(getItemType(for: item.text))
                         .font(.system(size: 13))
@@ -408,9 +410,13 @@ struct ClipboardItemView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.7))
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(colorScheme == .dark ? Color.black.opacity(0.15) : Color.white.opacity(0.5))
+                    .background(.ultraThinMaterial)
+            )
             .cornerRadius(14)
-            .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(PlainButtonStyle())
         .contextMenu {
