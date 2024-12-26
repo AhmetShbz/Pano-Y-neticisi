@@ -51,6 +51,14 @@ class KeyboardViewController: UIInputViewController {
         ])
         
         view.heightAnchor.constraint(equalToConstant: 291).isActive = true
+        
+        // Başlangıç pozisyonunu ayarla
+        hostingController.view.transform = CGAffineTransform(translationX: 0, y: 291)
+        
+        // Animasyonlu giriş
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            hostingController.view.transform = .identity
+        }
     }
     
     private func showToast(message: String) {
