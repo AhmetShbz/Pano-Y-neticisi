@@ -21,7 +21,7 @@ targets:
       path: Info.plist
       properties:
         CFBundleDisplayName: "Pano Yöneticisi"
-        UILaunchStoryboardName: ""
+        UILaunchStoryboardName: "LaunchScreen"
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIBackgroundModes:
