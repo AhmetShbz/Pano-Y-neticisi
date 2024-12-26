@@ -61,11 +61,22 @@ struct ClipboardView: View {
                     
                     Spacer()
                     
-                    // Başlık
-                    Text("Pano Yöneticisi")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .padding(.trailing, 12)
+                    Button(action: {
+                        onItemSelected("\n")
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "return")
+                                .font(.system(size: 17))
+                            Text("Sal")
+                                .font(.system(size: 15))
+                        }
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
+                        .cornerRadius(6)
+                    }
+                    .padding(.trailing, 12)
                 }
                 .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white)
                 
