@@ -5,7 +5,7 @@ import UIKit
 extension UIInputViewController {
     static var hasKeyboardAccess: Bool {
         let bundleId = Bundle.main.bundleIdentifier ?? ""
-        let keyboardId = "\(bundleId).KeyboardExtension"
+        let keyboardId = "\(bundleId).keyboard"
         
         if let keyboards = UserDefaults.standard.array(forKey: "AppleKeyboards") as? [String] {
             return keyboards.contains(keyboardId)
@@ -24,6 +24,134 @@ struct OnboardingPage: Identifiable {
     let secondaryDescription: String?
 }
 
+struct PageView: View {
+    let page: OnboardingPage
+    let colorScheme: ColorScheme
+    let onContinue: () -> Void
+    @State private var isAnimating = false
+    @State private var showContent = false
+    
+    var body: some View {
+        VStack(spacing: 25) {
+            Spacer()
+            
+            // İkon
+            Group {
+                if page.image == "AppLogo" {
+                    Image("AppLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
+                        .scaleEffect(isAnimating ? 1.1 : 0.9)
+                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
+                } else {
+                    Image(systemName: page.image)
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                        .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
+                        .scaleEffect(isAnimating ? 1.1 : 0.9)
+                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
+                }
+            }
+            .animation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+            .onAppear { 
+                isAnimating = true
+                withAnimation(.easeIn(duration: 0.5)) {
+                    showContent = true
+                }
+            }
+            .onDisappear {
+                showContent = false
+            }
+            
+            VStack(spacing: 16) {
+                // Başlık
+                Text(page.title)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.blue)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                
+                // Ana açıklama
+                Text(page.description)
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                    .foregroundColor(.secondary)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                
+                // İkincil açıklama
+                if let secondaryText = page.secondaryDescription {
+                    Text(secondaryText)
+                        .font(.callout)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                        .foregroundColor(.blue)
+                        .padding(.top, 8)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
+                }
+            }
+            .animation(.easeOut(duration: 0.5).delay(0.2), value: showContent)
+            
+            Spacer()
+            
+            // Aksiyon butonu
+            if let buttonTitle = page.buttonTitle {
+                Button(action: {
+                    if let action = page.buttonAction {
+                        action()
+                    } else {
+                        onContinue()
+                    }
+                }) {
+                    Text(buttonTitle)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.blue)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 12, x: 0, y: 6)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
+                }
+                .padding(.horizontal, 30)
+                .scaleEffect(isAnimating ? 1.0 : 0.95)
+            }
+            
+            // İleri butonu
+            if page.buttonTitle == nil {
+                Button(action: onContinue) {
+                    HStack {
+                        Text("Devam Et")
+                            .fontWeight(.semibold)
+                        Image(systemName: "chevron.right")
+                    }
+                    .foregroundColor(.blue)
+                    .font(.headline)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(
+                        Capsule()
+                            .stroke(Color.blue, lineWidth: 2)
+                    )
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                }
+                .padding(.top, 10)
+            }
+            
+            Spacer()
+                .frame(height: 20)
+        }
+        .padding()
+    }
+}
+
 struct OnboardingView: View {
     @ObservedObject var onboardingManager: OnboardingManager
     @State private var currentPage = 0
@@ -31,7 +159,6 @@ struct OnboardingView: View {
     @State private var animateBackground = false
     @State private var showNextButton = false
     @State private var dragOffset = CGSize.zero
-    @State private var checkTimer: Timer?
     @State private var keyboardPermissionGranted = false
     @State private var backgroundRefreshGranted = false
     
@@ -203,24 +330,6 @@ struct OnboardingView: View {
             DispatchQueue.main.async {
                 checkKeyboardPermissions()
                 checkBackgroundRefreshPermissions()
-                
-                checkTimer?.invalidate()
-                // Her 0.1 saniyede bir kontrol et
-                checkTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-                    checkKeyboardPermissions()
-                    
-                    if currentPage == 1 && keyboardPermissionGranted {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            currentPage = 2
-                        }
-                        timer.invalidate()
-                    } else if currentPage == 2 && backgroundRefreshGranted {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            currentPage = 3
-                        }
-                        timer.invalidate()
-                    }
-                }
             }
         }
     }
@@ -263,136 +372,5 @@ struct OnboardingView: View {
     private func checkBackgroundRefreshPermissions() {
         let status = UIApplication.shared.backgroundRefreshStatus
         backgroundRefreshGranted = status == .available
-    }
-}
-
-struct PageView: View {
-    let page: OnboardingPage
-    let colorScheme: ColorScheme
-    let onContinue: () -> Void
-    @State private var isAnimating = false
-    @State private var showContent = false
-    @State private var rotation3D = false
-    
-    var body: some View {
-        VStack(spacing: 25) {
-            Spacer()
-            
-            // İkon
-            Group {
-                if page.image == "AppLogo" {
-                    Image("AppLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 120, height: 120)
-                        .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
-                        .scaleEffect(isAnimating ? 1.1 : 0.9)
-                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
-                } else {
-                    Image(systemName: page.image)
-                        .font(.system(size: 80))
-                        .foregroundColor(.blue)
-                        .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
-                        .scaleEffect(isAnimating ? 1.1 : 0.9)
-                        .rotationEffect(.degrees(isAnimating ? 8 : -8))
-                }
-            }
-            .animation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
-            .onAppear { 
-                isAnimating = true
-                withAnimation(.easeIn(duration: 0.5)) {
-                    showContent = true
-                }
-            }
-            .onDisappear {
-                showContent = false
-            }
-            
-            VStack(spacing: 16) {
-                // Başlık
-                Text(page.title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.blue)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
-                
-                // Ana açıklama
-                Text(page.description)
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                    .foregroundColor(.secondary)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
-                
-                // İkincil açıklama
-                if let secondaryText = page.secondaryDescription {
-                    Text(secondaryText)
-                        .font(.callout)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                        .foregroundColor(.blue)
-                        .padding(.top, 8)
-                        .opacity(showContent ? 1 : 0)
-                        .offset(y: showContent ? 0 : 20)
-                }
-            }
-            .animation(.easeOut(duration: 0.5).delay(0.2), value: showContent)
-            
-            Spacer()
-            
-            // Aksiyon butonu
-            if let buttonTitle = page.buttonTitle {
-                Button(action: {
-                    if let action = page.buttonAction {
-                        action()
-                    } else {
-                        onContinue()
-                    }
-                }) {
-                    Text(buttonTitle)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            Color.blue
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .shadow(color: Color.blue.opacity(colorScheme == .dark ? 0.3 : 0.2), radius: 12, x: 0, y: 6)
-                        .opacity(showContent ? 1 : 0)
-                        .offset(y: showContent ? 0 : 20)
-                }
-                .padding(.horizontal, 30)
-                .scaleEffect(isAnimating ? 1.0 : 0.95)
-            }
-            
-            // İleri butonu
-            if page.buttonTitle == nil {
-                Button(action: onContinue) {
-                    HStack {
-                        Text("Devam Et")
-                            .fontWeight(.semibold)
-                        Image(systemName: "chevron.right")
-                    }
-                    .foregroundColor(.blue)
-                    .font(.headline)
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 24)
-                    .background(
-                        Capsule()
-                            .stroke(Color.blue, lineWidth: 2)
-                    )
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
-                }
-                .padding(.top, 10)
-            }
-            
-            Spacer()
-                .frame(height: 20)
-        }
-        .padding()
     }
 } 
