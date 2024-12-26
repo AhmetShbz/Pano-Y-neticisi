@@ -56,6 +56,23 @@ public class ClipboardManager: ObservableObject {
             object: nil
         )
         
+        // Darwin bildirimlerini dinle
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let observer = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        let name = "com.ahmtcanx.clipboardmanager.dataChanged" as CFString
+        
+        CFNotificationCenterAddObserver(center,
+                                      observer,
+                                      { (_, observer, name, _, _) in
+            let manager = Unmanaged<ClipboardManager>.fromOpaque(observer!).takeUnretainedValue()
+            DispatchQueue.main.async {
+                manager.loadItems()
+            }
+        },
+                                      name as CFString,
+                                      nil,
+                                      .deliverImmediately)
+        
         // Periyodik kontrol başlat
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkPasteboardChanges()
@@ -119,7 +136,16 @@ public class ClipboardManager: ObservableObject {
         if let data = try? JSONEncoder().encode(clipboardItems) {
             userDefaults?.set(data, forKey: "clipboardItems")
             userDefaults?.synchronize()
-            notifyClipboardChanged()
+            
+            // Veri değişikliğini hemen bildir
+            DispatchQueue.main.async {
+                self.notifyClipboardChanged()
+                
+                // Darwin bildirimini de gönder
+                let center = CFNotificationCenterGetDarwinNotifyCenter()
+                let name = "com.ahmtcanx.clipboardmanager.dataChanged" as CFString
+                CFNotificationCenterPostNotification(center, CFNotificationName(name), nil, nil, true)
+            }
         }
     }
     
@@ -175,5 +201,10 @@ public class ClipboardManager: ObservableObject {
     deinit {
         updateTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
+        
+        // Darwin observer'ı temizle
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let observer = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        CFNotificationCenterRemoveObserver(center, observer, nil, nil)
     }
 } 
