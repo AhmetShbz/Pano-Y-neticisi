@@ -56,7 +56,7 @@ class KeyboardViewController: UIInputViewController {
             hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        view.heightAnchor.constraint(equalToConstant: 291).isActive = true
+        view.heightAnchor.constraint(equalToConstant: 274).isActive = true
         
         // Klavyeyi direkt olarak göster
         hostingController.view.transform = .identity
