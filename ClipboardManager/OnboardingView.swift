@@ -19,6 +19,11 @@ struct OnboardingView: View {
     @State private var showNextButton = false
     @State private var dragOffset = CGSize.zero
     @State private var checkTimer: Timer?
+    @State private var keyboardPermissionGranted = false
+    @State private var backgroundRefreshGranted = false
+    
+    // Hafızada tutulacak sayfa sayısını sınırla
+    private let pageLimit = 1
     
     var pages: [OnboardingPage] {
         [
@@ -32,19 +37,35 @@ struct OnboardingView: View {
             ),
             OnboardingPage(
                 image: "doc.on.clipboard",
-                title: "Kurulum Adımları ",
-                description: "Ayarlar uygulamasında:\n\nKlavye → Klavyeler → Yeni Klavye Ekle\n\nPano Yöneticisi'ni seçtikten sonra Tam Erişim'i etkinleştirin.",
-                buttonTitle: "Klavye Ayarlarını Aç",
-                buttonAction: openKeyboardSettings,
-                secondaryDescription: "🔒 Tam Erişim izni yalnızca pano içeriğine erişmek için kullanılır ve verileriniz her zaman güvende kalır."
+                title: keyboardPermissionGranted ? "Harika! ✨" : "Kurulum Adımları ",
+                description: keyboardPermissionGranted ? 
+                    "Klavye izinleri başarıyla verildi! Artık Pano Yöneticisi'ni klavyenizde kullanabilirsiniz." :
+                    "Ayarlar uygulamasında:\n\nKlavye → Klavyeler → Yeni Klavye Ekle\n\nPano Yöneticisi'ni seçtikten sonra Tam Erişim'i etkinleştirin.",
+                buttonTitle: keyboardPermissionGranted ? "Devam Et" : "Klavye Ayarlarını Aç",
+                buttonAction: keyboardPermissionGranted ? {
+                    withAnimation {
+                        currentPage += 1
+                    }
+                } : openKeyboardSettings,
+                secondaryDescription: keyboardPermissionGranted ? 
+                    "🎉 Tebrikler! Şimdi sıradaki adıma geçebiliriz." :
+                    "🔒 Tam Erişim izni yalnızca pano içeriğine erişmek için kullanılır ve verileriniz her zaman güvende kalır."
             ),
             OnboardingPage(
                 image: "arrow.clockwise",
-                title: "Arka Plan Yenileme",
-                description: "Uygulamanın arka planda çalışarak yeni kopyalanan metinleri otomatik olarak kaydetmesi için Arka Plan Yenileme özelliğini açmanız gerekiyor.",
-                buttonTitle: "Arka Plan Ayarlarını Aç",
-                buttonAction: openBackgroundSettings,
-                secondaryDescription: "⚡️ Bu özellik sayesinde uygulama kapalıyken bile kopyaladığınız metinler kaydedilir."
+                title: backgroundRefreshGranted ? "Mükemmel! 🌟" : "Arka Plan Yenileme",
+                description: backgroundRefreshGranted ?
+                    "Arka plan yenileme izni başarıyla verildi! Artık uygulamanız arka planda çalışarak kopyaladığınız metinleri kaydedebilecek." :
+                    "Uygulamanın arka planda çalışarak yeni kopyalanan metinleri otomatik olarak kaydetmesi için Arka Plan Yenileme özelliğini açmanız gerekiyor.",
+                buttonTitle: backgroundRefreshGranted ? "Devam Et" : "Arka Plan Ayarlarını Aç",
+                buttonAction: backgroundRefreshGranted ? {
+                    withAnimation {
+                        currentPage += 1
+                    }
+                } : openBackgroundSettings,
+                secondaryDescription: backgroundRefreshGranted ?
+                    "🎊 Harika! Son adıma geçebiliriz." :
+                    "⚡️ Bu özellik sayesinde uygulama kapalıyken bile kopyaladığınız metinler kaydedilir."
             ),
             OnboardingPage(
                 image: "checkmark.seal.fill",
@@ -89,6 +110,7 @@ struct OnboardingView: View {
                     }
                 }
             }
+            .drawingGroup()
             .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -148,13 +170,41 @@ struct OnboardingView: View {
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
         }
+        .onAppear {
+            // İlk yüklemede izinleri kontrol et
+            DispatchQueue.main.async {
+                checkKeyboardPermissions()
+                checkBackgroundRefreshPermissions()
+                
+                // Animasyonu gecikmeli başlat
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation(Animation.easeInOut(duration: 6.0).repeatForever(autoreverses: true)) {
+                        animateBackground.toggle()
+                    }
+                }
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            // Zamanlayıcıyı başlat
-            checkTimer?.invalidate()
-            checkTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-                if currentPage == 1 {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        currentPage = 2
+            DispatchQueue.main.async {
+                checkKeyboardPermissions()
+                checkBackgroundRefreshPermissions()
+                
+                checkTimer?.invalidate()
+                // Daha sık kontrol et
+                checkTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { timer in
+                    checkKeyboardPermissions()
+                    checkBackgroundRefreshPermissions()
+                    
+                    if currentPage == 1 && keyboardPermissionGranted {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentPage = 2
+                        }
+                        timer.invalidate()
+                    } else if currentPage == 2 && backgroundRefreshGranted {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentPage = 3
+                        }
+                        timer.invalidate()
                     }
                 }
             }
@@ -162,8 +212,10 @@ struct OnboardingView: View {
     }
     
     private func openKeyboardSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
+        if let url = URL(string: UIApplication.openSettingsURLString + "/Keyboard/KEYBOARDS") {
             UIApplication.shared.open(url)
+        } else {
+            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
         }
     }
     
@@ -171,6 +223,28 @@ struct OnboardingView: View {
         if let url = URL(string: UIApplication.openSettingsURLString + "/ClipboardManager") {
             UIApplication.shared.open(url)
         }
+    }
+    
+    private func checkKeyboardPermissions() {
+        // Aktif klavyeleri kontrol et
+        if let keyboards = UserDefaults.standard.dictionary(forKey: "AppleKeyboards") as? [String: Any] {
+            let bundleId = Bundle.main.bundleIdentifier ?? ""
+            let keyboardId = "\(bundleId).KeyboardExtension"
+            keyboardPermissionGranted = keyboards.keys.contains(keyboardId)
+        }
+        
+        // Eğer klavye aktifse, tam erişim iznini kontrol et
+        if keyboardPermissionGranted {
+            let appGroupId = "group.\(Bundle.main.bundleIdentifier ?? "")"
+            if let userDefaults = UserDefaults(suiteName: appGroupId) {
+                keyboardPermissionGranted = userDefaults.bool(forKey: "KeyboardFullAccessGranted")
+            }
+        }
+    }
+    
+    private func checkBackgroundRefreshPermissions() {
+        let status = UIApplication.shared.backgroundRefreshStatus
+        backgroundRefreshGranted = status == .available
     }
 }
 
