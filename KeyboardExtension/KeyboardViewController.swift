@@ -25,7 +25,11 @@ class KeyboardViewController: UIInputViewController {
             rootView: ClipboardView(
                 clipboardManager: ClipboardManager.shared,
                 onItemSelected: { [weak self] text in
-                    self?.textDocumentProxy.insertText(text)
+                    if text == "__DELETE__" {
+                        self?.textDocumentProxy.deleteBackward()
+                    } else {
+                        self?.textDocumentProxy.insertText(text)
+                    }
                 },
                 onDismiss: { [weak self] in
                     self?.advanceToNextInputMode()
@@ -170,8 +174,11 @@ class KeyboardViewController: UIInputViewController {
             clipboardView.rootView = ClipboardView(
                 clipboardManager: clipboardManager,
                 onItemSelected: { [weak self] text in
-                    self?.textDocumentProxy.insertText(text)
-                    self?.showToast(message: "Metin yapıştırıldı ✓")
+                    if text == "__DELETE__" {
+                        self?.textDocumentProxy.deleteBackward()
+                    } else {
+                        self?.textDocumentProxy.insertText(text)
+                    }
                 },
                 onDismiss: { [weak self] in
                     self?.advanceToNextInputMode()

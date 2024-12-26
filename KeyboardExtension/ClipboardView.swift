@@ -76,6 +76,23 @@ struct ClipboardView: View {
                         .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
                         .cornerRadius(6)
                     }
+                    .padding(.trailing, 6)
+                    
+                    Button(action: {
+                        onItemSelected("__DELETE__")
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "delete.left")
+                                .font(.system(size: 17))
+                            Text("Sil")
+                                .font(.system(size: 15))
+                        }
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
+                        .cornerRadius(6)
+                    }
                     .padding(.trailing, 12)
                 }
                 .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white)
