@@ -44,7 +44,11 @@ struct ClipboardView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: onDismiss) {
+                    Button(action: {
+                        onDismiss()
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
+                    }) {
                         HStack(spacing: 6) {
                             Image(systemName: "keyboard.chevron.compact.down")
                                 .font(.system(size: 17))
@@ -64,6 +68,8 @@ struct ClipboardView: View {
                     
                     Button(action: {
                         onItemSelected("\n")
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
                     }) {
                         HStack(spacing: 6) {
                             Image(systemName: "return")
