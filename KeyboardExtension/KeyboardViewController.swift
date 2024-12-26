@@ -14,6 +14,24 @@ class KeyboardViewController: UIInputViewController {
         setupKeyboardView()
         setupClipboardObservers()
         lastPasteboardChangeCount = UIPasteboard.general.changeCount
+        
+        // Tam erişim durumu değiştiğinde bildirim gönder
+        NotificationCenter.default.post(
+            name: Notification.Name("KeyboardFullAccessChanged"),
+            object: nil,
+            userInfo: ["hasFullAccess": hasFullAccess]
+        )
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Klavye görünür olduğunda da kontrol et
+        NotificationCenter.default.post(
+            name: Notification.Name("KeyboardFullAccessChanged"),
+            object: nil,
+            userInfo: ["hasFullAccess": hasFullAccess]
+        )
     }
     
     private func setupKeyboardView() {

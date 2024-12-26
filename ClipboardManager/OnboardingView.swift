@@ -1,6 +1,19 @@
 import SwiftUI
 import UIKit
 
+// Klavye izinlerini kontrol etmek için extension
+extension UIInputViewController {
+    static var hasKeyboardAccess: Bool {
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
+        let keyboardId = "\(bundleId).KeyboardExtension"
+        
+        if let keyboards = UserDefaults.standard.array(forKey: "AppleKeyboards") as? [String] {
+            return keyboards.contains(keyboardId)
+        }
+        return false
+    }
+}
+
 struct OnboardingPage: Identifiable {
     let id = UUID()
     let image: String
@@ -172,15 +185,17 @@ struct OnboardingView: View {
         }
         .onAppear {
             // İlk yüklemede izinleri kontrol et
-            DispatchQueue.main.async {
-                checkKeyboardPermissions()
-                checkBackgroundRefreshPermissions()
-                
-                // Animasyonu gecikmeli başlat
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    withAnimation(Animation.easeInOut(duration: 6.0).repeatForever(autoreverses: true)) {
-                        animateBackground.toggle()
-                    }
+            checkKeyboardPermissions()
+            checkBackgroundRefreshPermissions()
+            
+            // Klavye izinleri değiştiğinde dinle
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("KeyboardFullAccessChanged"),
+                object: nil,
+                queue: .main
+            ) { notification in
+                if let hasFullAccess = notification.userInfo?["hasFullAccess"] as? Bool {
+                    keyboardPermissionGranted = hasFullAccess && UIInputViewController.hasKeyboardAccess
                 }
             }
         }
@@ -190,10 +205,9 @@ struct OnboardingView: View {
                 checkBackgroundRefreshPermissions()
                 
                 checkTimer?.invalidate()
-                // Daha sık kontrol et
-                checkTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { timer in
+                // Her 0.1 saniyede bir kontrol et
+                checkTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
                     checkKeyboardPermissions()
-                    checkBackgroundRefreshPermissions()
                     
                     if currentPage == 1 && keyboardPermissionGranted {
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -212,10 +226,8 @@ struct OnboardingView: View {
     }
     
     private func openKeyboardSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString + "/Keyboard/KEYBOARDS") {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
-        } else {
-            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
         }
     }
     
@@ -226,19 +238,25 @@ struct OnboardingView: View {
     }
     
     private func checkKeyboardPermissions() {
-        // Aktif klavyeleri kontrol et
-        if let keyboards = UserDefaults.standard.dictionary(forKey: "AppleKeyboards") as? [String: Any] {
-            let bundleId = Bundle.main.bundleIdentifier ?? ""
-            let keyboardId = "\(bundleId).KeyboardExtension"
-            keyboardPermissionGranted = keyboards.keys.contains(keyboardId)
-        }
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
+        let keyboardId = "\(bundleId).keyboard"
         
-        // Eğer klavye aktifse, tam erişim iznini kontrol et
-        if keyboardPermissionGranted {
-            let appGroupId = "group.\(Bundle.main.bundleIdentifier ?? "")"
-            if let userDefaults = UserDefaults(suiteName: appGroupId) {
-                keyboardPermissionGranted = userDefaults.bool(forKey: "KeyboardFullAccessGranted")
-            }
+        // Aktif klavyeleri kontrol et
+        if let keyboards = UserDefaults.standard.array(forKey: "AppleKeyboards") as? [String] {
+            let isKeyboardEnabled = keyboards.contains(keyboardId)
+            print("🔍 Aktif Klavyeler:", keyboards)
+            print("📱 Bizim Klavye ID:", keyboardId)
+            print("✅ Klavye Aktif mi?:", isKeyboardEnabled)
+            
+            // Tam erişim iznini kontrol et
+            let hasFullAccess = UIPasteboard.general.hasStrings
+            print("🔑 Tam Erişim Var mı?:", hasFullAccess)
+            
+            keyboardPermissionGranted = isKeyboardEnabled && hasFullAccess
+            print("🎯 Final Durum (keyboardPermissionGranted):", keyboardPermissionGranted)
+        } else {
+            print("❌ Klavye listesi alınamadı!")
+            keyboardPermissionGranted = false
         }
     }
     
