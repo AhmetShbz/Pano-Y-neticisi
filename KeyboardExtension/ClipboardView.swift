@@ -97,9 +97,8 @@ struct ClipboardView: View {
                         .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
                         .cornerRadius(6)
                     }
-                    .highPriorityGesture(
+                    .simultaneousGesture(
                         DragGesture(minimumDistance: 0)
-                            .onChanged { _ in }
                             .onEnded { _ in
                                 deleteTimer?.invalidate()
                                 deleteTimer = nil
