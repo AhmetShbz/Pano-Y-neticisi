@@ -193,6 +193,11 @@ struct ClipboardView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
+                    .refreshable {
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
+                        clipboardManager.loadItems()
+                    }
                 }
             }
         }
