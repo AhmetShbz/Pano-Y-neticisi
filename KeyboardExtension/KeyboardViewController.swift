@@ -42,7 +42,7 @@ class KeyboardViewController: UIInputViewController {
             hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        view.heightAnchor.constraint(equalToConstant: 350).isActive = true
+        view.heightAnchor.constraint(equalToConstant: 291).isActive = true
     }
     
     private func showToast(message: String) {
@@ -83,11 +83,15 @@ class KeyboardViewController: UIInputViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if let inputView = view as? UIInputView {
-            inputView.frame.size.height = 350
-        }
         clipboardManager.loadItems()
         updateKeyboardView()
+    }
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        if let inputView = view as? UIInputView {
+            inputView.frame.size.height = 291
+        }
     }
     
     private func setupClipboardObservers() {
