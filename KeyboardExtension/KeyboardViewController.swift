@@ -11,9 +11,15 @@ class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupKeyboardView()
-        setupClipboardObservers()
         lastPasteboardChangeCount = UIPasteboard.general.changeCount
+        setupClipboardObservers()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupKeyboardView()
+        clipboardManager.loadItems()
+        updateKeyboardView()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -52,13 +58,8 @@ class KeyboardViewController: UIInputViewController {
         
         view.heightAnchor.constraint(equalToConstant: 291).isActive = true
         
-        // Başlangıç pozisyonunu ayarla
-        hostingController.view.transform = CGAffineTransform(translationX: 0, y: 291)
-        
-        // Animasyonlu giriş
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
-            hostingController.view.transform = .identity
-        }
+        // Klavyeyi direkt olarak göster
+        hostingController.view.transform = .identity
     }
     
     private func showToast(message: String) {
@@ -95,12 +96,6 @@ class KeyboardViewController: UIInputViewController {
                 self?.toastView?.removeFromParent()
             }
         }
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        clipboardManager.loadItems()
-        updateKeyboardView()
     }
     
     override func viewWillLayoutSubviews() {
