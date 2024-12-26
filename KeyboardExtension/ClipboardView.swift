@@ -6,6 +6,7 @@ struct ClipboardView: View {
     var onDismiss: () -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var animateBackground = false
+    @State private var deleteTimer: Timer?
     
     var sortedItems: [ClipboardItem] {
         let pinnedItems = clipboardManager.clipboardItems.filter { $0.isPinned }
@@ -79,7 +80,10 @@ struct ClipboardView: View {
                     .padding(.trailing, 6)
                     
                     Button(action: {
-                        onItemSelected("__DELETE__")
+                        // Normal dokunmada tek karakter sil
+                        if deleteTimer == nil {
+                            onItemSelected("__DELETE__")
+                        }
                     }) {
                         HStack(spacing: 6) {
                             Image(systemName: "delete.left")
@@ -93,6 +97,30 @@ struct ClipboardView: View {
                         .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
                         .cornerRadius(6)
                     }
+                    .highPriorityGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in }
+                            .onEnded { _ in
+                                deleteTimer?.invalidate()
+                                deleteTimer = nil
+                            }
+                    )
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: 0.3)
+                            .onEnded { _ in
+                                let generator = UIImpactFeedbackGenerator(style: .medium)
+                                generator.impactOccurred()
+                                
+                                // Sürekli silme için timer başlat
+                                deleteTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+                                    onItemSelected("__DELETE__")
+                                    
+                                    // Hafif titreşim geri bildirimi
+                                    let lightGenerator = UIImpactFeedbackGenerator(style: .light)
+                                    lightGenerator.impactOccurred()
+                                }
+                            }
+                    )
                     .padding(.trailing, 12)
                 }
                 .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white)
