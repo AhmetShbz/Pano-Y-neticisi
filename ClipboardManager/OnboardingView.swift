@@ -315,6 +315,11 @@ struct OnboardingView: View {
             checkKeyboardPermissions()
             checkBackgroundRefreshPermissions()
             
+            // Eğer kaydedilmiş sayfa varsa onu yükle
+            if let lastPage = UserDefaults.standard.object(forKey: "LastOnboardingPage") as? Int {
+                currentPage = lastPage
+            }
+            
             // Klavye izinleri değiştiğinde dinle
             NotificationCenter.default.addObserver(
                 forName: Notification.Name("KeyboardFullAccessChanged"),
@@ -335,6 +340,9 @@ struct OnboardingView: View {
     }
     
     private func openKeyboardSettings() {
+        // Mevcut sayfayı kaydet
+        UserDefaults.standard.set(currentPage, forKey: "LastOnboardingPage")
+        
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
@@ -358,7 +366,7 @@ struct OnboardingView: View {
             print("✅ Klavye Aktif mi?:", isKeyboardEnabled)
             
             // Tam erişim iznini kontrol et
-            let hasFullAccess = UIPasteboard.general.hasStrings
+            let hasFullAccess = UIPasteboard.general.hasStrings || UIPasteboard.general.hasURLs || UIPasteboard.general.hasImages
             print("🔑 Tam Erişim Var mı?:", hasFullAccess)
             
             keyboardPermissionGranted = isKeyboardEnabled && hasFullAccess
