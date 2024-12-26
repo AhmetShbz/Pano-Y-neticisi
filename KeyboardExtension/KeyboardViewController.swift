@@ -6,6 +6,7 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardView: UIHostingController<ClipboardView>?
     private var updateTimer: Timer?
     private var lastPasteboardChangeCount: Int = 0
+    private var toastView: UIHostingController<ToastView>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,6 +43,42 @@ class KeyboardViewController: UIInputViewController {
         ])
         
         view.heightAnchor.constraint(equalToConstant: 350).isActive = true
+    }
+    
+    private func showToast(message: String) {
+        // Varolan toast'u kaldır
+        toastView?.view.removeFromSuperview()
+        toastView?.removeFromParent()
+        
+        // Yeni toast oluştur
+        let hostingController = UIHostingController(rootView: ToastView(message: message))
+        self.toastView = hostingController
+        
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.didMove(toParent: self)
+        
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor, constant: 10)
+        ])
+        
+        // Animasyon ile göster
+        hostingController.view.alpha = 0
+        UIView.animate(withDuration: 0.3) {
+            hostingController.view.alpha = 1
+        }
+        
+        // 2 saniye sonra kaldır
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            UIView.animate(withDuration: 0.3, animations: {
+                self?.toastView?.view.alpha = 0
+            }) { _ in
+                self?.toastView?.view.removeFromSuperview()
+                self?.toastView?.removeFromParent()
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -94,6 +131,7 @@ class KeyboardViewController: UIInputViewController {
                     DispatchQueue.main.async { [weak self] in
                         self?.clipboardManager.addItem(text)
                         self?.updateKeyboardView()
+                        self?.showToast(message: "Metin kaydedildi ✓")
                     }
                 }
             }
@@ -125,6 +163,7 @@ class KeyboardViewController: UIInputViewController {
                 clipboardManager: clipboardManager,
                 onItemSelected: { [weak self] text in
                     self?.textDocumentProxy.insertText(text)
+                    self?.showToast(message: "Metin yapıştırıldı ✓")
                 },
                 onDismiss: { [weak self] in
                     self?.advanceToNextInputMode()
