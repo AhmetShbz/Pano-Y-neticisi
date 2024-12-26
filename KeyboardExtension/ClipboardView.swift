@@ -83,6 +83,8 @@ struct ClipboardView: View {
                         // Normal dokunmada tek karakter sil
                         if deleteTimer == nil {
                             onItemSelected("__DELETE__")
+                            let generator = UIImpactFeedbackGenerator(style: .light)
+                            generator.impactOccurred()
                         }
                     }) {
                         HStack(spacing: 6) {
