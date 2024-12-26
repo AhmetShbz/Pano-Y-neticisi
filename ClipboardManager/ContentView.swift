@@ -151,8 +151,8 @@ struct ContentView: View {
                             // Toast mesajı
                             if showToast {
                                 ToastView(message: toastMessage)
-                                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                                    .zIndex(1)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                    .offset(y: 10)
                             }
                         }
                     }
@@ -372,17 +372,19 @@ struct ToastView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        Text(message)
-            .font(.system(size: 16, weight: .medium))
-            .foregroundColor(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                Capsule()
-                    .fill(Color.black.opacity(0.8))
-                    .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
-            )
-            .padding(.bottom, 20)
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+            Text(message)
+                .font(.system(size: 14))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(colorScheme == .dark ? Color.black.opacity(0.8) : Color.white)
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
     }
 }
 
