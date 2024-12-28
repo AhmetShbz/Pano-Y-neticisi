@@ -1,9 +1,5 @@
 # Copypast - iOS Pano Yöneticisi
 
-<p align="center">
-  <img src="foto/IMG_2231.PNG" width="200" alt="App Icon">
-</p>
-
 Copypast, iOS cihazlar için geliştirilmiş modern ve kullanıcı dostu bir pano yönetim uygulamasıdır. Kopyaladığınız metinleri otomatik olarak kaydeder ve istediğiniz zaman tekrar kullanmanıza olanak sağlar. Hem aydınlık hem de karanlık mod desteği ile göz yormayan bir deneyim sunar.
 
 ## ✨ Özellikler
@@ -19,13 +15,9 @@ Copypast, iOS cihazlar için geliştirilmiş modern ve kullanıcı dostu bir pan
 
 ## 📱 Kullanım Videosu
 
-<p align="center">
-  <video width="200" controls>
-    <source src="video/kullanim.mp4" type="video/mp4">
-  </video>
-</p>
+https://github.com/AhmetShbz/Pano-Y-neticisi/blob/main/video/Kullanım.MP4
 
-## 🚀 Kurulum
+## 📱 Kurulum
 
 1. Projeyi klonlayın:
    ```bash
