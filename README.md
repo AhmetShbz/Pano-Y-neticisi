@@ -17,20 +17,12 @@ Copypast, iOS cihazlar için geliştirilmiş modern ve kullanıcı dostu bir pan
 - 🔄 Kolay erişim ve yeniden kullanım
 - 🔒 Gizlilik odaklı yerel depolama
 
-## 📱 Ekran Görüntüleri
+## 📱 Kullanım Videosu
 
-### Karanlık Mod
 <p align="center">
-  <img src="foto/IMG_2227.PNG" width="200" alt="Light Mode 1">
-  <img src="foto/IMG_2228.PNG" width="200" alt="Light Mode 2">
-  <img src="foto/IMG_2229.PNG" width="200" alt="Light Mode 3">
-</p>
-
-### Aydınlık Mod
-<p align="center">
-  <img src="foto/IMG_2243.PNG" width="200" alt="Dark Mode 1">
-  <img src="foto/IMG_2244.PNG" width="200" alt="Dark Mode 2">
-  <img src="foto/IMG_2245.PNG" width="200" alt="Dark Mode 3">
+  <video width="200" controls>
+    <source src="video/kullanim.mp4" type="video/mp4">
+  </video>
 </p>
 
 ## 🚀 Kurulum
