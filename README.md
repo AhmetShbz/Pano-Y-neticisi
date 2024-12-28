@@ -15,7 +15,9 @@ Copypast, iOS cihazlar için geliştirilmiş modern ve kullanıcı dostu bir pan
 
 ## 📱 Kullanım Videosu
 
-https://github.com/AhmetShbz/Pano-Y-neticisi/blob/main/video/Kullanım.MP4
+<p align="center">
+  <img src="video/kullanim.gif" alt="Kullanım Videosu">
+</p>
 
 ## 📱 Kurulum
 
